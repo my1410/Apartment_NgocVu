@@ -1,9 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
-import { App as AntdApp, Button, Card, Col, Form, Input, InputNumber, Row, Select, Space, Table, Tag } from 'antd';
-import { LogoutOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
+import { App as AntdApp, Button, Card, Col, Form, Input, InputNumber, Modal, Row, Select, Space, Table, Tag } from 'antd';
+import { EditOutlined, LogoutOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
 import { daNangLocations } from '../../data/vietnamLocations.js';
-import { createApartment, getApartments, getCurrentUser, getInterests, logout } from '../../services/apiClient.js';
+import { createApartment, getApartments, getCurrentUser, getInterests, logout, updateApartment } from '../../services/apiClient.js';
 import { AdminHeader, AdminPage, FormPanel, Toolbar } from './styles.js';
 
 const defaultImage = 'https://images.unsplash.com/photo-1600607688969-a5bfcd646154?auto=format&fit=crop&w=1200&q=80';
@@ -22,6 +22,7 @@ function parseTags(value = '') {
 
 export function AdminDashboard() {
   const [form] = Form.useForm();
+  const [stockForm] = Form.useForm();
   const { message } = AntdApp.useApp();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -29,6 +30,8 @@ export function AdminDashboard() {
   const [interests, setInterests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [updatingStock, setUpdatingStock] = useState(false);
+  const [editingApartment, setEditingApartment] = useState(null);
   const [authChecked, setAuthChecked] = useState(false);
 
   const selectedDistrict = Form.useWatch('district', form);
@@ -99,6 +102,43 @@ export function AdminDashboard() {
     navigate('/login', { replace: true });
   };
 
+  const openStockEditor = (apartment) => {
+    setEditingApartment(apartment);
+    stockForm.setFieldsValue({
+      availableUnits: apartment.availableUnits ?? 0,
+      status: apartment.status
+    });
+  };
+
+  const closeStockEditor = () => {
+    setEditingApartment(null);
+    stockForm.resetFields();
+  };
+
+  const handleStockUpdate = async (values) => {
+    if (!editingApartment) return;
+
+    setUpdatingStock(true);
+    try {
+      const updatedApartment = await updateApartment(editingApartment.id || editingApartment._id, values);
+      setApartments((current) => current.map((apartment) => (
+        (apartment.id || apartment._id) === (updatedApartment.id || updatedApartment._id)
+          ? updatedApartment
+          : apartment
+      )));
+      message.success(
+        updatedApartment.availableUnits <= 0
+          ? 'Đã cập nhật căn hộ thành hết số lượng.'
+          : 'Đã cập nhật số lượng căn hộ.'
+      );
+      closeStockEditor();
+    } catch (error) {
+      message.error(error.response?.data?.message || 'Không thể cập nhật căn hộ.');
+    } finally {
+      setUpdatingStock(false);
+    }
+  };
+
   const columns = [
     {
       title: 'Căn hộ',
@@ -122,10 +162,31 @@ export function AdminDashboard() {
       key: 'priceLabel'
     },
     {
+      title: 'Số lượng',
+      dataIndex: 'availableUnits',
+      key: 'availableUnits',
+      render: (availableUnits) => {
+        const units = availableUnits ?? 0;
+        return units > 0
+          ? <Tag color="green">Còn {units}</Tag>
+          : <Tag color="red">Đã hết</Tag>;
+      }
+    },
+    {
       title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
       render: (status) => <Tag color={status === 'Đang bán' ? 'green' : 'blue'}>{status}</Tag>
+    },
+    {
+      title: 'Thao tác',
+      key: 'actions',
+      fixed: 'right',
+      render: (_, record) => (
+        <Button icon={<EditOutlined />} onClick={() => openStockEditor(record)}>
+          Sửa
+        </Button>
+      )
     }
   ];
 
@@ -351,6 +412,40 @@ export function AdminDashboard() {
           </Card>
         </Col>
       </Row>
+      <Modal
+        title={editingApartment ? `Cập nhật số lượng: ${editingApartment.title}` : 'Cập nhật số lượng'}
+        open={Boolean(editingApartment)}
+        onCancel={closeStockEditor}
+        onOk={() => stockForm.submit()}
+        confirmLoading={updatingStock}
+        okText="Lưu cập nhật"
+        cancelText="Hủy"
+      >
+        <Form
+          form={stockForm}
+          layout="vertical"
+          onFinish={handleStockUpdate}
+        >
+          <Form.Item
+            name="availableUnits"
+            label="Số lượng còn"
+            rules={[{ required: true, message: 'Nhập số lượng còn.' }]}
+            extra="Nhập 0 nếu căn hộ đã hết. Website khách sẽ tự hiện Đã hết và khóa nút quan tâm."
+          >
+            <InputNumber min={0} max={999} />
+          </Form.Item>
+          <Form.Item
+            name="status"
+            label="Trạng thái"
+            rules={[{ required: true, message: 'Chọn trạng thái.' }]}
+          >
+            <Select options={[
+              { label: 'Đang bán', value: 'Đang bán' },
+              { label: 'Cho thuê', value: 'Cho thuê' }
+            ]} />
+          </Form.Item>
+        </Form>
+      </Modal>
     </AdminPage>
   );
 }

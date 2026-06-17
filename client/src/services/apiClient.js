@@ -49,6 +49,11 @@ export async function createApartment(payload) {
   return normalizeApartment(data.data);
 }
 
+export async function updateApartment(apartmentId, payload) {
+  const { data } = await api.patch(`/apartments/${apartmentId}`, payload);
+  return normalizeApartment(data.data);
+}
+
 export async function register(values) {
   const { data } = await api.post('/auth/register', values);
   return data.data;

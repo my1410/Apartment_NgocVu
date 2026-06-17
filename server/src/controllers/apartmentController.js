@@ -116,6 +116,37 @@ export async function createApartment(req, res, next) {
   }
 }
 
+export async function updateApartment(req, res, next) {
+  try {
+    const allowedFields = ['availableUnits', 'status'];
+    const updates = allowedFields.reduce((payload, field) => {
+      if (req.body[field] !== undefined) {
+        payload[field] = req.body[field];
+      }
+      return payload;
+    }, {});
+
+    if (updates.availableUnits !== undefined) {
+      updates.availableUnits = Number(updates.availableUnits);
+    }
+
+    const apartment = await Apartment.findByIdAndUpdate(
+      req.params.id,
+      updates,
+      { new: true, runValidators: true }
+    );
+
+    if (!apartment) {
+      res.status(404);
+      throw new Error('Không tìm thấy căn hộ.');
+    }
+
+    res.json({ data: normalizeApartment(apartment) });
+  } catch (error) {
+    next(error);
+  }
+}
+
 export async function toggleFavorite(req, res, next) {
   try {
     const apartment = await Apartment.findById(req.params.id).select('_id title');
