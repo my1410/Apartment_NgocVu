@@ -12,6 +12,50 @@ https://my1410.github.io/Apartment_NgocVu/
 
 Lưu ý: GitHub Pages chỉ host frontend tĩnh. Nếu chưa deploy backend/API online, app vẫn cho test giao diện, danh mục, bộ lọc, trang chi tiết và map fallback bằng dữ liệu mẫu phía client.
 
+## Deploy demo đầy đủ
+
+Frontend đã có workflow GitHub Pages tại `.github/workflows/deploy-pages.yml`. Backend có sẵn blueprint `render.yaml` để deploy nhanh lên Render.
+
+1. Tạo database MongoDB Atlas và lấy connection string.
+2. Vào Render, chọn **New Blueprint**, kết nối repo `Apartment_NgocVu`, Render sẽ đọc `render.yaml`.
+3. Điền các biến bắt buộc cho service backend:
+
+```text
+MONGODB_URI=mongodb+srv://...
+OPENAI_API_KEY=sk-...           # không bắt buộc, thiếu key sẽ dùng AI fallback
+SMTP_USER=...
+SMTP_PASS=...
+SMTP_FROM=...
+```
+
+4. Sau khi Render deploy xong, lấy backend URL, ví dụ:
+
+```text
+https://apartment-ngocvu-api.onrender.com
+```
+
+5. Seed dữ liệu demo trên Render Shell hoặc local terminal có `MONGODB_URI` Atlas:
+
+```bash
+npm run seed --workspace server
+```
+
+Lệnh này tạo lại căn hộ mẫu và tài khoản admin:
+
+```text
+admin@example.com
+Admin@123456
+```
+
+6. Vào GitHub repo > Settings > Secrets and variables > Actions, thêm secret:
+
+```text
+VITE_API_URL=https://apartment-ngocvu-api.onrender.com/api
+VITE_GOOGLE_MAPS_API_KEY=your-google-map-key
+```
+
+7. Chạy lại GitHub Actions **Deploy GitHub Pages**. Khi đó link GitHub Pages sẽ gọi backend thật, đăng nhập admin và quản lý dữ liệu MongoDB online.
+
 ## Tính năng đã dựng
 
 - Giao diện full màn hình, tone hiện đại, responsive mobile.

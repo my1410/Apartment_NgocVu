@@ -5,6 +5,7 @@ import cookieParser from 'cookie-parser';
 import mongoSanitize from 'express-mongo-sanitize';
 import hpp from 'hpp';
 import rateLimit from 'express-rate-limit';
+import mongoose from 'mongoose';
 import apartmentRoutes from './routes/apartmentRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
@@ -18,8 +19,16 @@ app.set('trust proxy', 1);
 app.use(helmet({
   crossOriginResourcePolicy: { policy: 'cross-origin' }
 }));
+
+const configuredClientUrls = (process.env.CLIENT_URL || '')
+  .split(',')
+  .map((url) => url.trim())
+  .filter(Boolean);
+
 const allowedOrigins = [
-  process.env.CLIENT_URL,
+  ...configuredClientUrls,
+  'https://my1410.github.io',
+  'https://my1410.github.io/Apartment_NgocVu',
   'http://localhost:5173',
   'http://127.0.0.1:5173'
 ].filter(Boolean);
@@ -44,8 +53,22 @@ app.use(rateLimit({
   legacyHeaders: false
 }));
 
+app.get('/', (_req, res) => {
+  res.json({
+    status: 'ok',
+    service: 'Da Nang Apartment API',
+    health: '/health',
+    docs: 'Set VITE_API_URL on the client to this backend URL + /api'
+  });
+});
+
 app.get('/health', (_req, res) => {
-  res.json({ status: 'ok', service: 'real-estate-api' });
+  res.json({
+    status: 'ok',
+    service: 'real-estate-api',
+    database: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    environment: process.env.NODE_ENV || 'development'
+  });
 });
 
 app.use('/api/apartments', apartmentRoutes);

@@ -38,6 +38,8 @@ jobs:
         run: npm run build --workspace client
         env:
           GITHUB_PAGES: true
+          VITE_API_URL: ${{ secrets.VITE_API_URL }}
+          VITE_GOOGLE_MAPS_API_KEY: ${{ secrets.VITE_GOOGLE_MAPS_API_KEY }}
 
       - name: Support SPA routes
         run: cp client/dist/index.html client/dist/404.html
