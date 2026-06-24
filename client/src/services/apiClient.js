@@ -54,6 +54,11 @@ export async function updateApartment(apartmentId, payload) {
   return normalizeApartment(data.data);
 }
 
+export async function deleteApartment(apartmentId) {
+  const { data } = await api.delete(`/apartments/${apartmentId}`);
+  return data.data;
+}
+
 export async function register(values) {
   const { data } = await api.post('/auth/register', values);
   return data.data;
@@ -91,6 +96,11 @@ export async function createInterest(apartmentId, note) {
 
 export async function getInterests() {
   const { data } = await api.get('/apartments/interests');
+  return data.data;
+}
+
+export async function updateInterest(interestId, payload) {
+  const { data } = await api.patch(`/apartments/interests/${interestId}`, payload);
   return data.data;
 }
 

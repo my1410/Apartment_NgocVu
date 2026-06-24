@@ -118,7 +118,29 @@ export async function createApartment(req, res, next) {
 
 export async function updateApartment(req, res, next) {
   try {
-    const allowedFields = ['availableUnits', 'status'];
+    const allowedFields = [
+      'title',
+      'district',
+      'districtLabel',
+      'ward',
+      'address',
+      'price',
+      'priceLabel',
+      'rentLabel',
+      'area',
+      'bedrooms',
+      'bathrooms',
+      'type',
+      'status',
+      'availableUnits',
+      'featured',
+      'tags',
+      'image',
+      'gallery',
+      'description',
+      'highlights',
+      'coordinates'
+    ];
     const updates = allowedFields.reduce((payload, field) => {
       if (req.body[field] !== undefined) {
         payload[field] = req.body[field];
@@ -126,9 +148,9 @@ export async function updateApartment(req, res, next) {
       return payload;
     }, {});
 
-    if (updates.availableUnits !== undefined) {
-      updates.availableUnits = Number(updates.availableUnits);
-    }
+    ['price', 'area', 'bedrooms', 'bathrooms', 'availableUnits'].forEach((field) => {
+      if (updates[field] !== undefined) updates[field] = Number(updates[field]);
+    });
 
     const apartment = await Apartment.findByIdAndUpdate(
       req.params.id,
@@ -142,6 +164,21 @@ export async function updateApartment(req, res, next) {
     }
 
     res.json({ data: normalizeApartment(apartment) });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function deleteApartment(req, res, next) {
+  try {
+    const apartment = await Apartment.findByIdAndDelete(req.params.id);
+    if (!apartment) {
+      res.status(404);
+      throw new Error('Không tìm thấy căn hộ.');
+    }
+
+    await ApartmentInterest.deleteMany({ apartment: apartment._id });
+    res.json({ data: { id: apartment._id.toString(), deleted: true } });
   } catch (error) {
     next(error);
   }
@@ -219,6 +256,50 @@ export async function listInterests(_req, res, next) {
           encryptedPhone: undefined
         } : null
       }))
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function updateInterest(req, res, next) {
+  try {
+    const allowedStatuses = ['new', 'contacted', 'closed'];
+    const updates = {};
+    if (req.body.status !== undefined) {
+      if (!allowedStatuses.includes(req.body.status)) {
+        res.status(400);
+        throw new Error('Trạng thái lead không hợp lệ.');
+      }
+      updates.status = req.body.status;
+    }
+    if (req.body.note !== undefined) {
+      updates.note = req.body.note;
+    }
+
+    const interest = await ApartmentInterest.findByIdAndUpdate(
+      req.params.id,
+      updates,
+      { new: true, runValidators: true }
+    )
+      .populate('apartment', 'title address priceLabel districtLabel ward')
+      .populate('user', 'name email address emailVerified encryptedPhone')
+      .lean();
+
+    if (!interest) {
+      res.status(404);
+      throw new Error('Không tìm thấy nhu cầu khách hàng.');
+    }
+
+    res.json({
+      data: {
+        ...interest,
+        user: interest.user ? {
+          ...interest.user,
+          phone: decryptString(interest.user.encryptedPhone),
+          encryptedPhone: undefined
+        } : null
+      }
     });
   } catch (error) {
     next(error);

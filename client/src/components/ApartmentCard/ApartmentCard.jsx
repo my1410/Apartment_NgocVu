@@ -2,7 +2,7 @@ import { Badge, Button, Card, Space, Tag } from 'antd';
 import { EnvironmentOutlined, HeartFilled, HeartOutlined, HomeOutlined, PictureOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { CardBody, Image, MetaGrid, TitleRow } from './styles.js';
+import { AvailabilityBar, CardBody, Image, MetaGrid, TitleRow } from './styles.js';
 
 export function ApartmentCard({ apartment, index = 0, favorited = false, onFavorite, onInterest }) {
   const navigate = useNavigate();
@@ -30,6 +30,10 @@ export function ApartmentCard({ apartment, index = 0, favorited = false, onFavor
           <span>{apartment.bathrooms} WC</span>
           <span>{apartment.rentLabel}</span>
         </MetaGrid>
+        <AvailabilityBar $soldOut={soldOut}>
+          <div>{soldOut ? 'Đã hết số lượng' : `Còn ${apartment.availableUnits ?? 1} căn có thể tư vấn`}</div>
+          <span>{soldOut ? 'Admin đã khóa đăng ký quan tâm' : 'Cập nhật theo tồn kho admin'}</span>
+        </AvailabilityBar>
         <Space size={[8, 8]} wrap>
           {apartment.tags.map((tag) => (
             <Tag key={tag}>{tag}</Tag>

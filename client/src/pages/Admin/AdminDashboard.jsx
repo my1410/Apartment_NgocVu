@@ -1,12 +1,81 @@
 import { useEffect, useMemo, useState } from 'react';
-import { App as AntdApp, Button, Card, Col, Form, Input, InputNumber, Modal, Row, Select, Space, Table, Tag } from 'antd';
-import { EditOutlined, LogoutOutlined, PlusOutlined, ReloadOutlined } from '@ant-design/icons';
+import {
+  App as AntdApp,
+  Button,
+  Card,
+  Col,
+  Empty,
+  Form,
+  Input,
+  InputNumber,
+  Modal,
+  Popconfirm,
+  Row,
+  Select,
+  Space,
+  Statistic,
+  Table,
+  Tag,
+  Tooltip
+} from 'antd';
+import {
+  DeleteOutlined,
+  EditOutlined,
+  EyeOutlined,
+  FireOutlined,
+  HomeOutlined,
+  LogoutOutlined,
+  PlusOutlined,
+  ReloadOutlined,
+  SearchOutlined,
+  TeamOutlined,
+  WarningOutlined
+} from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
 import { daNangLocations } from '../../data/vietnamLocations.js';
-import { createApartment, getApartments, getCurrentUser, getInterests, logout, updateApartment } from '../../services/apiClient.js';
-import { AdminHeader, AdminPage, FormPanel, Toolbar } from './styles.js';
+import {
+  createApartment,
+  deleteApartment,
+  getApartments,
+  getCurrentUser,
+  getInterests,
+  logout,
+  updateApartment,
+  updateInterest
+} from '../../services/apiClient.js';
+import {
+  AdminHeader,
+  AdminPage,
+  FilterBar,
+  FormPanel,
+  KpiGrid,
+  ManagementGrid,
+  PanelTitle,
+  TableCard,
+  Toolbar
+} from './styles.js';
 
 const defaultImage = 'https://images.unsplash.com/photo-1600607688969-a5bfcd646154?auto=format&fit=crop&w=1200&q=80';
+
+const apartmentInitialValues = {
+  status: 'Đang bán',
+  type: 'Căn hộ cao cấp',
+  bedrooms: 2,
+  bathrooms: 2,
+  area: 70,
+  price: 2500000000,
+  availableUnits: 1,
+  featured: false,
+  lat: 16.0678,
+  lng: 108.2208,
+  image: defaultImage
+};
+
+const leadStatusOptions = [
+  { label: 'Mới', value: 'new' },
+  { label: 'Đã liên hệ', value: 'contacted' },
+  { label: 'Đã chốt', value: 'closed' }
+];
 
 function formatPriceLabel(price) {
   const billions = Number(price || 0) / 1000000000;
@@ -14,15 +83,182 @@ function formatPriceLabel(price) {
 }
 
 function parseTags(value = '') {
+  if (Array.isArray(value)) return value;
   return value
     .split(',')
     .map((tag) => tag.trim())
     .filter(Boolean);
 }
 
+function stringifyTags(tags = []) {
+  return Array.isArray(tags) ? tags.join(', ') : tags || '';
+}
+
+function getApartmentId(apartment) {
+  return apartment.id || apartment._id;
+}
+
+function serializeApartment(values) {
+  const districtMeta = daNangLocations.find((item) => item.value === values.district);
+  const payload = {
+    ...values,
+    districtLabel: districtMeta?.label || values.district,
+    price: Number(values.price),
+    priceLabel: formatPriceLabel(values.price),
+    rentLabel: values.rentLabel || 'Liên hệ',
+    featured: Boolean(values.featured),
+    tags: parseTags(values.tags),
+    highlights: parseTags(values.highlights),
+    gallery: parseTags(values.gallery),
+    image: values.image || defaultImage,
+    availableUnits: Number(values.availableUnits ?? 0),
+    coordinates: {
+      lat: Number(values.lat),
+      lng: Number(values.lng)
+    }
+  };
+
+  delete payload.lat;
+  delete payload.lng;
+  return payload;
+}
+
+function apartmentToFormValues(apartment) {
+  return {
+    ...apartment,
+    tags: stringifyTags(apartment.tags),
+    highlights: stringifyTags(apartment.highlights),
+    gallery: stringifyTags(apartment.gallery),
+    lat: apartment.coordinates?.lat,
+    lng: apartment.coordinates?.lng,
+    featured: Boolean(apartment.featured)
+  };
+}
+
+function ApartmentFormFields({ form }) {
+  const selectedDistrict = Form.useWatch('district', form);
+  const district = useMemo(
+    () => daNangLocations.find((item) => item.value === selectedDistrict),
+    [selectedDistrict]
+  );
+
+  return (
+    <>
+      <Form.Item name="title" label="Tên căn hộ" rules={[{ required: true, message: 'Nhập tên căn hộ.' }]}>
+        <Input placeholder="Ví dụ: Căn hộ ven sông Hàn" />
+      </Form.Item>
+      <Row gutter={12}>
+        <Col xs={24} md={12}>
+          <Form.Item name="district" label="Quận" rules={[{ required: true, message: 'Chọn quận.' }]}>
+            <Select
+              placeholder="Chọn quận"
+              options={daNangLocations.map((item) => ({ label: item.label, value: item.value }))}
+              onChange={() => form.setFieldValue('ward', undefined)}
+            />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item name="ward" label="Phường" rules={[{ required: true, message: 'Chọn phường.' }]}>
+            <Select
+              placeholder="Chọn phường"
+              disabled={!district}
+              options={(district?.wards || []).map((ward) => ({ label: ward, value: ward }))}
+            />
+          </Form.Item>
+        </Col>
+      </Row>
+      <Form.Item name="address" label="Địa chỉ" rules={[{ required: true, message: 'Nhập địa chỉ.' }]}>
+        <Input placeholder="Đường, phường, quận, Đà Nẵng" />
+      </Form.Item>
+      <Row gutter={12}>
+        <Col xs={24} md={12}>
+          <Form.Item name="price" label="Giá bán" rules={[{ required: true, message: 'Nhập giá bán.' }]}>
+            <InputNumber min={0} step={100000000} />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item name="rentLabel" label="Giá thuê">
+            <Input placeholder="18 triệu/tháng" />
+          </Form.Item>
+        </Col>
+      </Row>
+      <Row gutter={12}>
+        <Col xs={8}>
+          <Form.Item name="area" label="m2" rules={[{ required: true }]}>
+            <InputNumber min={1} />
+          </Form.Item>
+        </Col>
+        <Col xs={8}>
+          <Form.Item name="bedrooms" label="PN" rules={[{ required: true }]}>
+            <InputNumber min={0} max={10} />
+          </Form.Item>
+        </Col>
+        <Col xs={8}>
+          <Form.Item name="bathrooms" label="WC" rules={[{ required: true }]}>
+            <InputNumber min={0} max={10} />
+          </Form.Item>
+        </Col>
+      </Row>
+      <Row gutter={12}>
+        <Col xs={24} md={8}>
+          <Form.Item name="availableUnits" label="Số lượng còn" rules={[{ required: true }]}>
+            <InputNumber min={0} max={999} />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={8}>
+          <Form.Item name="status" label="Trạng thái" rules={[{ required: true }]}>
+            <Select options={[
+              { label: 'Đang bán', value: 'Đang bán' },
+              { label: 'Cho thuê', value: 'Cho thuê' }
+            ]} />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={8}>
+          <Form.Item name="featured" label="Nổi bật">
+            <Select options={[
+              { label: 'Có', value: true },
+              { label: 'Không', value: false }
+            ]} />
+          </Form.Item>
+        </Col>
+      </Row>
+      <Form.Item name="type" label="Loại căn hộ" rules={[{ required: true }]}>
+        <Input placeholder="Căn hộ cao cấp, studio, căn hộ vừa túi tiền..." />
+      </Form.Item>
+      <Row gutter={12}>
+        <Col xs={24} md={12}>
+          <Form.Item name="lat" label="Latitude" rules={[{ required: true }]}>
+            <InputNumber step={0.0001} />
+          </Form.Item>
+        </Col>
+        <Col xs={24} md={12}>
+          <Form.Item name="lng" label="Longitude" rules={[{ required: true }]}>
+            <InputNumber step={0.0001} />
+          </Form.Item>
+        </Col>
+      </Row>
+      <Form.Item name="image" label="Ảnh đại diện URL">
+        <Input placeholder="https://..." />
+      </Form.Item>
+      <Form.Item name="gallery" label="Gallery ảnh">
+        <Input.TextArea rows={2} placeholder="Dán nhiều URL, ngăn cách bằng dấu phẩy" />
+      </Form.Item>
+      <Form.Item name="description" label="Giới thiệu căn hộ">
+        <Input.TextArea rows={4} placeholder="Mô tả tiện ích, vị trí, pháp lý, đối tượng phù hợp..." />
+      </Form.Item>
+      <Form.Item name="tags" label="Tags">
+        <Input placeholder="View sông, Trung tâm, Nội thất mới" />
+      </Form.Item>
+      <Form.Item name="highlights" label="Điểm nổi bật">
+        <Input placeholder="Hồ bơi, Gym, Gần biển" />
+      </Form.Item>
+    </>
+  );
+}
+
 export function AdminDashboard() {
-  const [form] = Form.useForm();
-  const [stockForm] = Form.useForm();
+  const [createForm] = Form.useForm();
+  const [editForm] = Form.useForm();
   const { message } = AntdApp.useApp();
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
@@ -30,17 +266,14 @@ export function AdminDashboard() {
   const [interests, setInterests] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [updatingStock, setUpdatingStock] = useState(false);
   const [editingApartment, setEditingApartment] = useState(null);
+  const [keyword, setKeyword] = useState('');
+  const [statusFilter, setStatusFilter] = useState('all');
+  const [stockFilter, setStockFilter] = useState('all');
+  const [leadFilter, setLeadFilter] = useState('all');
   const [authChecked, setAuthChecked] = useState(false);
 
-  const selectedDistrict = Form.useWatch('district', form);
-  const district = useMemo(
-    () => daNangLocations.find((item) => item.value === selectedDistrict),
-    [selectedDistrict]
-  );
-
-  const loadApartments = async () => {
+  const loadDashboard = async () => {
     setLoading(true);
     const [items, leadItems] = await Promise.all([getApartments(), getInterests().catch(() => [])]);
     setApartments(items);
@@ -52,7 +285,7 @@ export function AdminDashboard() {
     getCurrentUser()
       .then((currentUser) => {
         setUser(currentUser);
-        return loadApartments();
+        return loadDashboard();
       })
       .catch(() => {
         message.warning('Bạn cần đăng nhập admin trước.');
@@ -61,35 +294,46 @@ export function AdminDashboard() {
       .finally(() => setAuthChecked(true));
   }, [message, navigate]);
 
-  const handleSubmit = async (values) => {
-    const districtMeta = daNangLocations.find((item) => item.value === values.district);
-    const payload = {
-      ...values,
-      districtLabel: districtMeta?.label || values.district,
-      priceLabel: formatPriceLabel(values.price),
-      rentLabel: values.rentLabel || 'Liên hệ',
-      featured: Boolean(values.featured),
-      tags: parseTags(values.tags),
-      highlights: parseTags(values.highlights),
-      gallery: parseTags(values.gallery),
-      image: values.image || defaultImage,
-      availableUnits: values.availableUnits,
-      description: values.description,
-      coordinates: {
-        lat: Number(values.lat),
-        lng: Number(values.lng)
-      }
+  const stats = useMemo(() => {
+    const availableUnits = apartments.reduce((sum, apartment) => sum + Number(apartment.availableUnits || 0), 0);
+    const soldOut = apartments.filter((apartment) => (apartment.availableUnits ?? 0) <= 0).length;
+    const featured = apartments.filter((apartment) => apartment.featured).length;
+    const newLeads = interests.filter((interest) => interest.status === 'new').length;
+    const totalValue = apartments.reduce((sum, apartment) => sum + Number(apartment.price || 0), 0);
+
+    return {
+      total: apartments.length,
+      availableUnits,
+      soldOut,
+      featured,
+      newLeads,
+      totalValue: `${(totalValue / 1000000000).toFixed(1)} tỷ`
     };
+  }, [apartments, interests]);
 
-    delete payload.lat;
-    delete payload.lng;
+  const filteredApartments = useMemo(() => apartments.filter((apartment) => {
+    const searchText = `${apartment.title} ${apartment.address} ${apartment.districtLabel} ${apartment.ward}`.toLowerCase();
+    const matchesKeyword = !keyword || searchText.includes(keyword.toLowerCase());
+    const matchesStatus = statusFilter === 'all' || apartment.status === statusFilter;
+    const matchesStock = stockFilter === 'all'
+      || (stockFilter === 'available' && (apartment.availableUnits ?? 0) > 0)
+      || (stockFilter === 'soldOut' && (apartment.availableUnits ?? 0) <= 0)
+      || (stockFilter === 'featured' && apartment.featured);
 
+    return matchesKeyword && matchesStatus && matchesStock;
+  }), [apartments, keyword, statusFilter, stockFilter]);
+
+  const filteredInterests = useMemo(() => interests.filter((interest) => (
+    leadFilter === 'all' || interest.status === leadFilter
+  )), [interests, leadFilter]);
+
+  const handleCreateApartment = async (values) => {
     setSaving(true);
     try {
-      await createApartment(payload);
+      await createApartment(serializeApartment(values));
       message.success('Đã thêm căn hộ mới.');
-      form.resetFields();
-      await loadApartments();
+      createForm.resetFields();
+      await loadDashboard();
     } catch (error) {
       message.error(error.response?.data?.message || 'Không thể thêm căn hộ.');
     } finally {
@@ -97,46 +341,61 @@ export function AdminDashboard() {
     }
   };
 
-  const handleLogout = async () => {
-    await logout();
-    navigate('/login', { replace: true });
-  };
-
-  const openStockEditor = (apartment) => {
+  const openEditApartment = (apartment) => {
     setEditingApartment(apartment);
-    stockForm.setFieldsValue({
-      availableUnits: apartment.availableUnits ?? 0,
-      status: apartment.status
-    });
+    editForm.setFieldsValue(apartmentToFormValues(apartment));
   };
 
-  const closeStockEditor = () => {
+  const closeEditApartment = () => {
     setEditingApartment(null);
-    stockForm.resetFields();
+    editForm.resetFields();
   };
 
-  const handleStockUpdate = async (values) => {
+  const handleUpdateApartment = async (values) => {
     if (!editingApartment) return;
 
-    setUpdatingStock(true);
+    setSaving(true);
     try {
-      const updatedApartment = await updateApartment(editingApartment.id || editingApartment._id, values);
+      const updatedApartment = await updateApartment(getApartmentId(editingApartment), serializeApartment(values));
       setApartments((current) => current.map((apartment) => (
-        (apartment.id || apartment._id) === (updatedApartment.id || updatedApartment._id)
-          ? updatedApartment
-          : apartment
+        getApartmentId(apartment) === getApartmentId(updatedApartment) ? updatedApartment : apartment
       )));
-      message.success(
-        updatedApartment.availableUnits <= 0
-          ? 'Đã cập nhật căn hộ thành hết số lượng.'
-          : 'Đã cập nhật số lượng căn hộ.'
-      );
-      closeStockEditor();
+      message.success('Đã cập nhật căn hộ.');
+      closeEditApartment();
     } catch (error) {
       message.error(error.response?.data?.message || 'Không thể cập nhật căn hộ.');
     } finally {
-      setUpdatingStock(false);
+      setSaving(false);
     }
+  };
+
+  const handleQuickStock = async (apartment, availableUnits) => {
+    const updatedApartment = await updateApartment(getApartmentId(apartment), {
+      availableUnits,
+      status: apartment.status
+    });
+    setApartments((current) => current.map((item) => (
+      getApartmentId(item) === getApartmentId(updatedApartment) ? updatedApartment : item
+    )));
+    message.success(availableUnits <= 0 ? 'Đã chuyển căn hộ sang Đã hết.' : 'Đã cập nhật số lượng.');
+  };
+
+  const handleDeleteApartment = async (apartment) => {
+    await deleteApartment(getApartmentId(apartment));
+    setApartments((current) => current.filter((item) => getApartmentId(item) !== getApartmentId(apartment)));
+    setInterests((current) => current.filter((interest) => interest.apartment?._id !== getApartmentId(apartment)));
+    message.success('Đã xoá căn hộ và lead liên quan.');
+  };
+
+  const handleLeadStatus = async (interest, status) => {
+    const updatedInterest = await updateInterest(interest._id, { status });
+    setInterests((current) => current.map((item) => (item._id === updatedInterest._id ? updatedInterest : item)));
+    message.success('Đã cập nhật trạng thái khách hàng.');
+  };
+
+  const handleLogout = async () => {
+    await logout();
+    navigate('/login', { replace: true });
   };
 
   const columns = [
@@ -144,27 +403,45 @@ export function AdminDashboard() {
       title: 'Căn hộ',
       dataIndex: 'title',
       key: 'title',
+      fixed: 'left',
+      width: 320,
       render: (title, record) => (
-        <div>
-          <strong>{title}</strong>
-          <p>{record.address}</p>
-        </div>
+        <Space>
+          <img src={record.image} alt={title} width={72} height={54} style={{ borderRadius: 14, objectFit: 'cover' }} />
+          <div>
+            <strong>{title}</strong>
+            <p>{record.address}</p>
+            <Space size={[4, 4]} wrap>
+              {record.featured && <Tag color="gold">Nổi bật</Tag>}
+              <Tag>{record.type}</Tag>
+            </Space>
+          </div>
+        </Space>
       )
     },
     {
       title: 'Khu vực',
       key: 'location',
+      width: 180,
       render: (_, record) => `${record.districtLabel} / ${record.ward}`
     },
     {
       title: 'Giá',
       dataIndex: 'priceLabel',
-      key: 'priceLabel'
+      key: 'priceLabel',
+      width: 120
     },
     {
-      title: 'Số lượng',
+      title: 'Thông số',
+      key: 'meta',
+      width: 160,
+      render: (_, record) => `${record.area}m2 - ${record.bedrooms}PN - ${record.bathrooms}WC`
+    },
+    {
+      title: 'Kho',
       dataIndex: 'availableUnits',
       key: 'availableUnits',
+      width: 120,
       render: (availableUnits) => {
         const units = availableUnits ?? 0;
         return units > 0
@@ -176,16 +453,42 @@ export function AdminDashboard() {
       title: 'Trạng thái',
       dataIndex: 'status',
       key: 'status',
+      width: 120,
       render: (status) => <Tag color={status === 'Đang bán' ? 'green' : 'blue'}>{status}</Tag>
     },
     {
       title: 'Thao tác',
       key: 'actions',
       fixed: 'right',
+      width: 260,
       render: (_, record) => (
-        <Button icon={<EditOutlined />} onClick={() => openStockEditor(record)}>
-          Sửa
-        </Button>
+        <Space wrap>
+          <Tooltip title="Xem trên website">
+            <Button icon={<EyeOutlined />}>
+              <Link to={`/apartments/${getApartmentId(record)}`}>Xem</Link>
+            </Button>
+          </Tooltip>
+          <Button icon={<EditOutlined />} onClick={() => openEditApartment(record)}>
+            Sửa
+          </Button>
+          <Popconfirm
+            title="Chuyển căn hộ này thành hết số lượng?"
+            okText="Đồng ý"
+            cancelText="Hủy"
+            onConfirm={() => handleQuickStock(record, 0)}
+          >
+            <Button icon={<WarningOutlined />}>Hết</Button>
+          </Popconfirm>
+          <Popconfirm
+            title="Xoá căn hộ này khỏi hệ thống?"
+            description="Lead liên quan cũng sẽ được xoá."
+            okText="Xoá"
+            cancelText="Hủy"
+            onConfirm={() => handleDeleteApartment(record)}
+          >
+            <Button danger icon={<DeleteOutlined />} />
+          </Popconfirm>
+        </Space>
       )
     }
   ];
@@ -194,16 +497,23 @@ export function AdminDashboard() {
     {
       title: 'Khách hàng',
       key: 'user',
+      width: 260,
       render: (_, record) => (
         <div>
           <strong>{record.user?.name || record.user?.email}</strong>
-          <p>{record.user?.email} - {record.user?.phone || 'Chưa có SĐT'}</p>
+          <p>{record.user?.email}</p>
+          <Space size={[6, 6]} wrap>
+            {record.user?.phone && <Button size="small" href={`tel:${record.user.phone}`}>Gọi</Button>}
+            {record.user?.email && <Button size="small" href={`mailto:${record.user.email}`}>Email</Button>}
+            {record.user?.emailVerified && <Tag color="green">Đã xác thực</Tag>}
+          </Space>
         </div>
       )
     },
     {
-      title: 'Địa chỉ',
+      title: 'Địa chỉ khách',
       key: 'address',
+      width: 260,
       render: (_, record) => {
         const address = record.user?.address;
         return address ? [address.street, address.ward, address.district, address.city].filter(Boolean).join(', ') : 'Chưa có';
@@ -212,18 +522,36 @@ export function AdminDashboard() {
     {
       title: 'Căn hộ quan tâm',
       key: 'apartment',
+      width: 300,
       render: (_, record) => (
         <div>
           <strong>{record.apartment?.title}</strong>
           <p>{record.apartment?.address}</p>
+          <Tag>{record.apartment?.priceLabel}</Tag>
         </div>
       )
     },
     {
-      title: 'Trạng thái',
+      title: 'Ghi chú',
+      dataIndex: 'note',
+      key: 'note',
+      width: 240,
+      render: (note) => note || 'Chưa có ghi chú'
+    },
+    {
+      title: 'Trạng thái CRM',
       dataIndex: 'status',
       key: 'status',
-      render: (status) => <Tag color={status === 'new' ? 'green' : 'blue'}>{status}</Tag>
+      fixed: 'right',
+      width: 190,
+      render: (status, record) => (
+        <Select
+          value={status}
+          style={{ width: 150 }}
+          options={leadStatusOptions}
+          onChange={(nextStatus) => handleLeadStatus(record, nextStatus)}
+        />
+      )
     }
   ];
 
@@ -235,13 +563,16 @@ export function AdminDashboard() {
     <AdminPage>
       <AdminHeader>
         <div>
-          <span>Admin dashboard</span>
-          <h1>Quản lý căn hộ</h1>
-          <p>Xin chào {user?.name}. Bạn có thể thêm căn hộ mới và xem danh sách đang có trong MongoDB.</p>
+          <span>Admin command center</span>
+          <h1>Quản trị căn hộ & khách hàng</h1>
+          <p>
+            Xin chào {user?.name}. Đây là khu điều hành tồn kho, căn hộ nổi bật, lead khách hàng,
+            trạng thái bán/thuê và dữ liệu hiển thị ngoài website.
+          </p>
         </div>
         <Space wrap>
-          <Button icon={<ReloadOutlined />} onClick={loadApartments}>
-            Tải lại
+          <Button icon={<ReloadOutlined />} onClick={loadDashboard}>
+            Đồng bộ dữ liệu
           </Button>
           <Button danger icon={<LogoutOutlined />} onClick={handleLogout}>
             Đăng xuất
@@ -249,201 +580,141 @@ export function AdminDashboard() {
         </Space>
       </AdminHeader>
 
-      <Row gutter={[24, 24]}>
-        <Col xs={24} xl={9}>
-          <FormPanel>
-            <h2>Thêm căn hộ mới</h2>
-            <Form
-              form={form}
-              layout="vertical"
-              onFinish={handleSubmit}
-              initialValues={{
-                status: 'Đang bán',
-                type: 'Căn hộ cao cấp',
-                bedrooms: 2,
-                bathrooms: 2,
-                area: 70,
-                price: 2500000000,
-                availableUnits: 1,
-                lat: 16.0678,
-                lng: 108.2208,
-                image: defaultImage
-              }}
-            >
-              <Form.Item name="title" label="Tên căn hộ" rules={[{ required: true }]}>
-                <Input placeholder="Ví dụ: Căn hộ ven sông Hàn" />
-              </Form.Item>
-              <Row gutter={12}>
-                <Col span={12}>
-                  <Form.Item name="district" label="Quận" rules={[{ required: true }]}>
-                    <Select
-                      placeholder="Chọn quận"
-                      options={daNangLocations.map((item) => ({ label: item.label, value: item.value }))}
-                      onChange={() => form.setFieldValue('ward', undefined)}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item name="ward" label="Phường" rules={[{ required: true }]}>
-                    <Select
-                      placeholder="Chọn phường"
-                      disabled={!district}
-                      options={(district?.wards || []).map((ward) => ({ label: ward, value: ward }))}
-                    />
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Form.Item name="address" label="Địa chỉ" rules={[{ required: true }]}>
-                <Input placeholder="Đường, phường, quận, Đà Nẵng" />
-              </Form.Item>
-              <Row gutter={12}>
-                <Col span={12}>
-                  <Form.Item name="price" label="Giá bán" rules={[{ required: true }]}>
-                    <InputNumber min={0} step={100000000} />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item name="rentLabel" label="Giá thuê">
-                    <Input placeholder="18 triệu/tháng" />
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Row gutter={12}>
-                <Col span={8}>
-                  <Form.Item name="area" label="m2" rules={[{ required: true }]}>
-                    <InputNumber min={1} />
-                  </Form.Item>
-                </Col>
-                <Col span={8}>
-                  <Form.Item name="bedrooms" label="PN" rules={[{ required: true }]}>
-                    <InputNumber min={0} max={10} />
-                  </Form.Item>
-                </Col>
-                <Col span={8}>
-                  <Form.Item name="bathrooms" label="WC" rules={[{ required: true }]}>
-                    <InputNumber min={0} max={10} />
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Row gutter={12}>
-                <Col span={8}>
-                  <Form.Item name="availableUnits" label="Còn" rules={[{ required: true }]}>
-                    <InputNumber min={0} max={999} />
-                  </Form.Item>
-                </Col>
-                <Col span={8}>
-                  <Form.Item name="status" label="Trạng thái" rules={[{ required: true }]}>
-                    <Select options={[
-                      { label: 'Đang bán', value: 'Đang bán' },
-                      { label: 'Cho thuê', value: 'Cho thuê' }
-                    ]} />
-                  </Form.Item>
-                </Col>
-                <Col span={8}>
-                  <Form.Item name="type" label="Loại căn hộ" rules={[{ required: true }]}>
-                    <Input />
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Row gutter={12}>
-                <Col span={12}>
-                  <Form.Item name="lat" label="Latitude" rules={[{ required: true }]}>
-                    <InputNumber step={0.0001} />
-                  </Form.Item>
-                </Col>
-                <Col span={12}>
-                  <Form.Item name="lng" label="Longitude" rules={[{ required: true }]}>
-                    <InputNumber step={0.0001} />
-                  </Form.Item>
-                </Col>
-              </Row>
-              <Form.Item name="image" label="Ảnh URL">
-                <Input placeholder="https://..." />
-              </Form.Item>
-              <Form.Item name="gallery" label="Gallery ảnh">
-                <Input.TextArea placeholder="Dán nhiều URL, ngăn cách bằng dấu phẩy" />
-              </Form.Item>
-              <Form.Item name="description" label="Giới thiệu căn hộ">
-                <Input.TextArea rows={4} placeholder="Mô tả tiện ích, vị trí, pháp lý, đối tượng phù hợp..." />
-              </Form.Item>
-              <Form.Item name="tags" label="Tags">
-                <Input placeholder="View sông, Trung tâm, Nội thất mới" />
-              </Form.Item>
-              <Form.Item name="highlights" label="Điểm nổi bật">
-                <Input placeholder="Hồ bơi, Gym, Gần biển" />
-              </Form.Item>
-              <Button type="primary" htmlType="submit" block icon={<PlusOutlined />} loading={saving}>
-                Thêm căn hộ
-              </Button>
-            </Form>
-          </FormPanel>
-        </Col>
-        <Col xs={24} xl={15}>
-          <Card
-            title="Danh sách căn hộ"
-            extra={<Link to="/">Xem ngoài website</Link>}
+      <KpiGrid>
+        <Card>
+          <Statistic title="Tổng căn hộ" value={stats.total} prefix={<HomeOutlined />} />
+        </Card>
+        <Card>
+          <Statistic title="Tổng số lượng còn" value={stats.availableUnits} prefix={<FireOutlined />} />
+        </Card>
+        <Card>
+          <Statistic title="Căn đã hết" value={stats.soldOut} prefix={<WarningOutlined />} />
+        </Card>
+        <Card>
+          <Statistic title="Lead mới" value={stats.newLeads} prefix={<TeamOutlined />} />
+        </Card>
+        <Card>
+          <Statistic title="Căn nổi bật" value={stats.featured} />
+        </Card>
+        <Card>
+          <Statistic title="Tổng giá trị rao bán" value={stats.totalValue} />
+        </Card>
+      </KpiGrid>
+
+      <ManagementGrid>
+        <FormPanel>
+          <PanelTitle>
+            <span>Tạo dữ liệu mới</span>
+            <h2>Thêm căn hộ</h2>
+            <p>Form đầy đủ cho ảnh, gallery, tọa độ bản đồ, tags, điểm nổi bật và tồn kho.</p>
+          </PanelTitle>
+          <Form
+            form={createForm}
+            layout="vertical"
+            onFinish={handleCreateApartment}
+            initialValues={apartmentInitialValues}
           >
+            <ApartmentFormFields form={createForm} />
+            <Button type="primary" htmlType="submit" block icon={<PlusOutlined />} loading={saving}>
+              Thêm căn hộ vào hệ thống
+            </Button>
+          </Form>
+        </FormPanel>
+
+        <div>
+          <TableCard
+            title="Quản lý căn hộ"
+            extra={<Link to="/apartments">Xem danh mục public</Link>}
+          >
+            <FilterBar>
+              <Input
+                allowClear
+                prefix={<SearchOutlined />}
+                placeholder="Tìm theo tên, địa chỉ, khu vực..."
+                value={keyword}
+                onChange={(event) => setKeyword(event.target.value)}
+              />
+              <Select
+                value={statusFilter}
+                onChange={setStatusFilter}
+                options={[
+                  { label: 'Tất cả trạng thái', value: 'all' },
+                  { label: 'Đang bán', value: 'Đang bán' },
+                  { label: 'Cho thuê', value: 'Cho thuê' }
+                ]}
+              />
+              <Select
+                value={stockFilter}
+                onChange={setStockFilter}
+                options={[
+                  { label: 'Tất cả tồn kho', value: 'all' },
+                  { label: 'Còn hàng', value: 'available' },
+                  { label: 'Đã hết', value: 'soldOut' },
+                  { label: 'Nổi bật', value: 'featured' }
+                ]}
+              />
+            </FilterBar>
             <Toolbar>
-              <strong>{apartments.length}</strong>
-              <span>căn hộ đang hiển thị</span>
+              <strong>{filteredApartments.length}</strong>
+              <span>căn hộ phù hợp bộ lọc quản trị</span>
             </Toolbar>
             <Table
-              rowKey={(record) => record.id || record._id}
+              rowKey={(record) => getApartmentId(record)}
               columns={columns}
-              dataSource={apartments}
+              dataSource={filteredApartments}
               loading={loading}
               pagination={{ pageSize: 6 }}
-              scroll={{ x: 860 }}
+              scroll={{ x: 1400 }}
+              locale={{ emptyText: <Empty description="Chưa có căn hộ phù hợp" /> }}
             />
-          </Card>
-          <Card title="Khách hàng quan tâm" style={{ marginTop: 24 }}>
+          </TableCard>
+
+          <TableCard title="CRM khách hàng quan tâm">
+            <FilterBar>
+              <Select
+                value={leadFilter}
+                onChange={setLeadFilter}
+                options={[
+                  { label: 'Tất cả lead', value: 'all' },
+                  ...leadStatusOptions
+                ]}
+              />
+            </FilterBar>
             <Toolbar>
-              <strong>{interests.length}</strong>
-              <span>nhu cầu cần liên hệ</span>
+              <strong>{filteredInterests.length}</strong>
+              <span>nhu cầu cần theo dõi</span>
             </Toolbar>
             <Table
               rowKey={(record) => record._id}
               columns={interestColumns}
-              dataSource={interests}
+              dataSource={filteredInterests}
               loading={loading}
               pagination={{ pageSize: 5 }}
-              scroll={{ x: 900 }}
+              scroll={{ x: 1250 }}
+              rowClassName={(record) => `lead-${record.status}`}
+              locale={{ emptyText: <Empty description="Chưa có khách quan tâm" /> }}
             />
-          </Card>
-        </Col>
-      </Row>
+          </TableCard>
+        </div>
+      </ManagementGrid>
+
       <Modal
-        title={editingApartment ? `Cập nhật số lượng: ${editingApartment.title}` : 'Cập nhật số lượng'}
+        title={editingApartment ? `Sửa căn hộ: ${editingApartment.title}` : 'Sửa căn hộ'}
         open={Boolean(editingApartment)}
-        onCancel={closeStockEditor}
-        onOk={() => stockForm.submit()}
-        confirmLoading={updatingStock}
-        okText="Lưu cập nhật"
+        onCancel={closeEditApartment}
+        onOk={() => editForm.submit()}
+        confirmLoading={saving}
+        okText="Lưu thay đổi"
         cancelText="Hủy"
+        width={920}
+        destroyOnHidden
       >
         <Form
-          form={stockForm}
+          form={editForm}
           layout="vertical"
-          onFinish={handleStockUpdate}
+          onFinish={handleUpdateApartment}
         >
-          <Form.Item
-            name="availableUnits"
-            label="Số lượng còn"
-            rules={[{ required: true, message: 'Nhập số lượng còn.' }]}
-            extra="Nhập 0 nếu căn hộ đã hết. Website khách sẽ tự hiện Đã hết và khóa nút quan tâm."
-          >
-            <InputNumber min={0} max={999} />
-          </Form.Item>
-          <Form.Item
-            name="status"
-            label="Trạng thái"
-            rules={[{ required: true, message: 'Chọn trạng thái.' }]}
-          >
-            <Select options={[
-              { label: 'Đang bán', value: 'Đang bán' },
-              { label: 'Cho thuê', value: 'Cho thuê' }
-            ]} />
-          </Form.Item>
+          <ApartmentFormFields form={editForm} />
         </Form>
       </Modal>
     </AdminPage>

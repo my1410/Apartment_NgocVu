@@ -79,3 +79,22 @@ export const MetaGrid = styled.div`
     grid-template-columns: repeat(2, 1fr);
   }
 `;
+
+export const AvailabilityBar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 12px 14px;
+  border: 1px solid ${({ $soldOut }) => ($soldOut ? 'rgba(248, 113, 113, 0.34)' : 'rgba(32, 208, 163, 0.28)')};
+  border-radius: 18px;
+  color: ${({ $soldOut }) => ($soldOut ? '#fecaca' : '#9df8dc')};
+  background: ${({ $soldOut }) => ($soldOut ? 'rgba(248, 113, 113, 0.1)' : 'rgba(32, 208, 163, 0.1)')};
+  font-weight: 900;
+
+  span {
+    color: rgba(231, 238, 251, 0.62);
+    font-size: 13px;
+    font-weight: 800;
+  }
+`;
