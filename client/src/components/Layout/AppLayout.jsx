@@ -11,6 +11,8 @@ import {
   UnorderedListOutlined
 } from '@ant-design/icons';
 import { Link, NavLink, useLocation } from 'react-router-dom';
+import { AiChatbot } from '../AiChatbot/AiChatbot.jsx';
+import { getApartments } from '../../services/apiClient.js';
 import { Header, HeaderInner, Logo, MobileDrawerContent, MobileMenuButton, Nav, PageShell } from './styles.js';
 
 const navItems = [
@@ -23,11 +25,18 @@ const navItems = [
 
 export function AppLayout({ children }) {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [chatApartments, setChatApartments] = useState([]);
   const location = useLocation();
 
   useEffect(() => {
     setMenuOpen(false);
   }, [location.pathname, location.hash]);
+
+  useEffect(() => {
+    getApartments()
+      .then(setChatApartments)
+      .catch(() => setChatApartments([]));
+  }, []);
 
   return (
     <PageShell>
@@ -79,6 +88,7 @@ export function AppLayout({ children }) {
         </MobileDrawerContent>
       </Drawer>
       {children}
+      <AiChatbot apartments={chatApartments} />
     </PageShell>
   );
 }

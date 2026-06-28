@@ -3,7 +3,6 @@ import { App as AntdApp, Button, Card, Empty, Spin } from 'antd';
 import { BulbOutlined } from '@ant-design/icons';
 import { ApartmentCard } from '../../components/ApartmentCard/ApartmentCard.jsx';
 import { ApartmentFilters } from '../../components/ApartmentFilters/ApartmentFilters.jsx';
-import { AiChatbot } from '../../components/AiChatbot/AiChatbot.jsx';
 import { MapView } from '../../components/MapView/MapView.jsx';
 import { SectionHeader } from '../../components/SectionHeader/SectionHeader.jsx';
 import {
@@ -160,7 +159,6 @@ export function ApartmentsPage() {
           </StickyMap>
         </ContentGrid>
       </Section>
-      <AiChatbot apartments={filteredApartments} />
     </HomeWrap>
   );
 }

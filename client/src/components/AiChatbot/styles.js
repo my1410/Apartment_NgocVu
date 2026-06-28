@@ -79,3 +79,13 @@ export const Composer = styled.div`
   padding: 14px;
   border-top: 1px solid rgba(255, 255, 255, 0.1);
 `;
+
+export const SuggestionBar = styled.div`
+  padding: 0 14px 14px;
+
+  .ant-btn {
+    border-color: rgba(157, 248, 220, 0.22);
+    color: #d9fff3;
+    background: rgba(32, 208, 163, 0.08);
+  }
+`;
