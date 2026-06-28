@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
-import { App as AntdApp, Button, Empty, Spin } from 'antd';
+import { App as AntdApp, Button, Card, Empty, Space, Spin, Statistic } from 'antd';
+import { CustomerServiceOutlined, HeartOutlined, UserOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
 import { ApartmentCard } from '../../components/ApartmentCard/ApartmentCard.jsx';
 import { SectionHeader } from '../../components/SectionHeader/SectionHeader.jsx';
@@ -45,9 +46,20 @@ export function FavoritesPage() {
       <Section>
         <SectionHeader
           eyebrow="Căn hộ ưa thích"
-          title="Những căn hộ bạn đã lưu"
-          description="Danh sách này giúp admin hiểu nhu cầu của bạn và liên hệ tư vấn đúng căn hơn."
+          title="Quản lý căn hộ ưa thích của tôi"
+          description="Theo dõi căn đã lưu, gửi tín hiệu quan tâm cho admin và cập nhật hồ sơ để tư vấn viên liên hệ đúng thông tin."
         />
+        <Card>
+          <Space size={18} wrap>
+            <Statistic title="Căn đã lưu" value={apartments.length} prefix={<HeartOutlined />} />
+            <Button icon={<UserOutlined />}>
+              <Link to="/account">Quản lý tài khoản</Link>
+            </Button>
+            <Button type="primary" icon={<CustomerServiceOutlined />}>
+              <Link to="/contact">Gửi yêu cầu tư vấn</Link>
+            </Button>
+          </Space>
+        </Card>
         {loading ? (
           <Spin size="large" />
         ) : apartments.length ? (

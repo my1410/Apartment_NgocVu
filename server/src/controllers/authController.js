@@ -2,7 +2,7 @@ import { z } from 'zod';
 import crypto from 'crypto';
 import { User } from '../models/User.js';
 import { authCookieOptions, signAuthToken } from '../utils/token.js';
-import { encryptString } from '../utils/crypto.js';
+import { decryptString, encryptString } from '../utils/crypto.js';
 import { sendVerificationEmail } from '../utils/email.js';
 
 const registerSchema = z.object({
@@ -26,6 +26,31 @@ const loginSchema = z.object({
 const verifySchema = z.object({
   token: z.string().min(20)
 });
+
+const updateProfileSchema = z.object({
+  name: z.string().min(2).max(80).optional(),
+  phone: z.string().min(8).optional(),
+  address: z.object({
+    street: z.string().min(2).optional(),
+    ward: z.string().optional(),
+    district: z.string().optional(),
+    city: z.string().optional()
+  }).optional()
+});
+
+function serializeUser(user) {
+  const raw = user.toObject ? user.toObject() : user;
+  return {
+    id: raw._id?.toString?.() || raw.id,
+    name: raw.name,
+    email: raw.email,
+    role: raw.role,
+    phone: raw.encryptedPhone ? decryptString(raw.encryptedPhone) : undefined,
+    address: raw.address,
+    emailVerified: raw.emailVerified,
+    createdAt: raw.createdAt
+  };
+}
 
 export async function register(req, res, next) {
   try {
@@ -53,11 +78,7 @@ export async function register(req, res, next) {
     res.cookie('token', authToken, authCookieOptions());
     res.status(201).json({
       data: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-        emailVerified: user.emailVerified,
+        ...serializeUser(user),
         verificationPreviewUrl: emailResult.previewUrl
       }
     });
@@ -77,7 +98,7 @@ export async function login(req, res, next) {
 
     const token = signAuthToken(user);
     res.cookie('token', token, authCookieOptions());
-    res.json({ data: { id: user._id, name: user.name, email: user.email, role: user.role, emailVerified: user.emailVerified } });
+    res.json({ data: serializeUser(user) });
   } catch (error) {
     next(error);
   }
@@ -88,8 +109,34 @@ export function logout(_req, res) {
   res.json({ message: 'Đã đăng xuất.' });
 }
 
-export function me(req, res) {
-  res.json({ data: req.user });
+export async function me(req, res, next) {
+  try {
+    const user = await User.findById(req.user._id).select('-password');
+    res.json({ data: serializeUser(user) });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function updateMe(req, res, next) {
+  try {
+    const payload = updateProfileSchema.parse(req.body);
+    const user = await User.findById(req.user._id).select('-password');
+
+    if (payload.name !== undefined) user.name = payload.name;
+    if (payload.phone !== undefined) user.encryptedPhone = encryptString(payload.phone);
+    if (payload.address) {
+      user.address = {
+        ...(user.address?.toObject?.() || user.address || {}),
+        ...payload.address
+      };
+    }
+
+    await user.save();
+    res.json({ data: serializeUser(user) });
+  } catch (error) {
+    next(error);
+  }
 }
 
 export async function verifyEmail(req, res, next) {

@@ -20,7 +20,7 @@ export function HomePage() {
             <Link to="/apartments">Xem danh mục căn hộ</Link>
           </Button>
           <Button size="large">
-            <a href="#contact">Liên hệ tư vấn</a>
+            <Link to="/contact">Liên hệ tư vấn</Link>
           </Button>
         </HeroActions>
       </HomeHero>
@@ -35,21 +35,21 @@ export function HomePage() {
         />
         <Row gutter={[18, 18]}>
           <Col xs={24} md={8}>
-            <FeatureCard>
+            <FeatureCard as={Link} to="/apartments">
               <EnvironmentOutlined />
               <h3>Lọc theo khu vực</h3>
               <p>Chọn Hải Châu, Sơn Trà, Ngũ Hành Sơn hoặc từng phường để xem đúng căn hộ trong khu vực.</p>
             </FeatureCard>
           </Col>
           <Col xs={24} md={8}>
-            <FeatureCard>
+            <FeatureCard as={Link} to="/favorites">
               <HeartOutlined />
               <h3>Căn hộ ưa thích</h3>
               <p>Lưu căn hộ bạn quan tâm, gửi tín hiệu cho admin và nhận tư vấn dựa trên nhu cầu thật.</p>
             </FeatureCard>
           </Col>
           <Col xs={24} md={8}>
-            <FeatureCard>
+            <FeatureCard as={Link} to="/account">
               <SafetyCertificateOutlined />
               <h3>Bảo mật tài khoản</h3>
               <p>Đăng ký bằng email, số điện thoại, địa chỉ; có xác nhận email và cookie HTTP-only.</p>
@@ -69,7 +69,7 @@ export function HomePage() {
             <p><CustomerServiceOutlined /> Hotline: 0900 000 000</p>
             <p>Email: support@dnapartmenthub.vn</p>
             <Button type="primary">
-              <Link to="/apartments">Bắt đầu tìm căn hộ</Link>
+              <Link to="/contact">Gửi yêu cầu tư vấn</Link>
             </Button>
           </Space>
         </Card>

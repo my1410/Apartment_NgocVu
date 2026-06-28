@@ -1,10 +1,12 @@
 import { useEffect, useState } from 'react';
 import { Button, Drawer } from 'antd';
 import {
+  ContactsOutlined,
   HeartOutlined,
   HomeOutlined,
   LoginOutlined,
   MenuOutlined,
+  UserOutlined,
   UserAddOutlined,
   UnorderedListOutlined
 } from '@ant-design/icons';
@@ -14,7 +16,9 @@ import { Header, HeaderInner, Logo, MobileDrawerContent, MobileMenuButton, Nav, 
 const navItems = [
   { to: '/', label: 'Trang chủ', icon: <HomeOutlined /> },
   { to: '/apartments', label: 'Danh mục căn hộ', icon: <UnorderedListOutlined /> },
-  { to: '/favorites', label: 'Căn hộ ưa thích', icon: <HeartOutlined /> }
+  { to: '/favorites', label: 'Căn hộ ưa thích', icon: <HeartOutlined /> },
+  { to: '/contact', label: 'Liên hệ', icon: <ContactsOutlined /> },
+  { to: '/account', label: 'Tài khoản', icon: <UserOutlined /> }
 ];
 
 export function AppLayout({ children }) {
@@ -41,7 +45,6 @@ export function AppLayout({ children }) {
                 {item.icon} {item.label}
               </NavLink>
             ))}
-            <a href="/#contact">Liên hệ</a>
             <Button type="primary" icon={<LoginOutlined />}>
               <Link to="/login">Đăng nhập</Link>
             </Button>
@@ -67,7 +70,6 @@ export function AppLayout({ children }) {
               {item.icon} {item.label}
             </NavLink>
           ))}
-          <a href="/#contact">Liên hệ</a>
           <Button type="primary" size="large" icon={<LoginOutlined />} block>
             <Link to="/login">Đăng nhập</Link>
           </Button>

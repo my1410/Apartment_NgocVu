@@ -19,6 +19,7 @@ import {
   Tooltip
 } from 'antd';
 import {
+  ContactsOutlined,
   DeleteOutlined,
   EditOutlined,
   EyeOutlined,
@@ -37,10 +38,12 @@ import {
   createApartment,
   deleteApartment,
   getApartments,
+  getContactRequests,
   getCurrentUser,
   getInterests,
   logout,
   updateApartment,
+  updateContactRequest,
   updateInterest
 } from '../../services/apiClient.js';
 import {
@@ -264,6 +267,7 @@ export function AdminDashboard() {
   const [user, setUser] = useState(null);
   const [apartments, setApartments] = useState([]);
   const [interests, setInterests] = useState([]);
+  const [contacts, setContacts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingApartment, setEditingApartment] = useState(null);
@@ -271,13 +275,19 @@ export function AdminDashboard() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [stockFilter, setStockFilter] = useState('all');
   const [leadFilter, setLeadFilter] = useState('all');
+  const [contactFilter, setContactFilter] = useState('all');
   const [authChecked, setAuthChecked] = useState(false);
 
   const loadDashboard = async () => {
     setLoading(true);
-    const [items, leadItems] = await Promise.all([getApartments(), getInterests().catch(() => [])]);
+    const [items, leadItems, contactItems] = await Promise.all([
+      getApartments(),
+      getInterests().catch(() => []),
+      getContactRequests().catch(() => [])
+    ]);
     setApartments(items);
     setInterests(leadItems);
+    setContacts(contactItems);
     setLoading(false);
   };
 
@@ -299,6 +309,7 @@ export function AdminDashboard() {
     const soldOut = apartments.filter((apartment) => (apartment.availableUnits ?? 0) <= 0).length;
     const featured = apartments.filter((apartment) => apartment.featured).length;
     const newLeads = interests.filter((interest) => interest.status === 'new').length;
+    const newContacts = contacts.filter((contact) => contact.status === 'new').length;
     const totalValue = apartments.reduce((sum, apartment) => sum + Number(apartment.price || 0), 0);
 
     return {
@@ -307,9 +318,10 @@ export function AdminDashboard() {
       soldOut,
       featured,
       newLeads,
+      newContacts,
       totalValue: `${(totalValue / 1000000000).toFixed(1)} tỷ`
     };
-  }, [apartments, interests]);
+  }, [apartments, interests, contacts]);
 
   const filteredApartments = useMemo(() => apartments.filter((apartment) => {
     const searchText = `${apartment.title} ${apartment.address} ${apartment.districtLabel} ${apartment.ward}`.toLowerCase();
@@ -326,6 +338,10 @@ export function AdminDashboard() {
   const filteredInterests = useMemo(() => interests.filter((interest) => (
     leadFilter === 'all' || interest.status === leadFilter
   )), [interests, leadFilter]);
+
+  const filteredContacts = useMemo(() => contacts.filter((contact) => (
+    contactFilter === 'all' || contact.status === contactFilter
+  )), [contacts, contactFilter]);
 
   const handleCreateApartment = async (values) => {
     setSaving(true);
@@ -391,6 +407,14 @@ export function AdminDashboard() {
     const updatedInterest = await updateInterest(interest._id, { status });
     setInterests((current) => current.map((item) => (item._id === updatedInterest._id ? updatedInterest : item)));
     message.success('Đã cập nhật trạng thái khách hàng.');
+  };
+
+  const handleContactStatus = async (contact, status) => {
+    const updatedContact = await updateContactRequest(contact.id || contact._id, { status });
+    setContacts((current) => current.map((item) => (
+      (item.id || item._id) === (updatedContact.id || updatedContact._id) ? updatedContact : item
+    )));
+    message.success('Đã cập nhật yêu cầu liên hệ.');
   };
 
   const handleLogout = async () => {
@@ -555,6 +579,56 @@ export function AdminDashboard() {
     }
   ];
 
+  const contactColumns = [
+    {
+      title: 'Khách liên hệ',
+      key: 'customer',
+      width: 260,
+      render: (_, record) => (
+        <div>
+          <strong>{record.name}</strong>
+          <p>{record.email}</p>
+          <Space size={[6, 6]} wrap>
+            {record.phone && <Button size="small" href={`tel:${record.phone}`}>Gọi</Button>}
+            <Button size="small" href={`mailto:${record.email}`}>Email</Button>
+          </Space>
+        </div>
+      )
+    },
+    {
+      title: 'Nhu cầu',
+      key: 'need',
+      width: 260,
+      render: (_, record) => (
+        <div>
+          <Tag>{record.district || 'Chưa chọn khu vực'}</Tag>
+          <p>{record.budget || 'Chưa có ngân sách'}</p>
+        </div>
+      )
+    },
+    {
+      title: 'Nội dung',
+      dataIndex: 'message',
+      key: 'message',
+      width: 360
+    },
+    {
+      title: 'Trạng thái',
+      dataIndex: 'status',
+      key: 'status',
+      fixed: 'right',
+      width: 190,
+      render: (status, record) => (
+        <Select
+          value={status}
+          style={{ width: 150 }}
+          options={leadStatusOptions}
+          onChange={(nextStatus) => handleContactStatus(record, nextStatus)}
+        />
+      )
+    }
+  ];
+
   if (!authChecked) {
     return <AdminPage>Đang kiểm tra phiên đăng nhập...</AdminPage>;
   }
@@ -594,7 +668,7 @@ export function AdminDashboard() {
           <Statistic title="Lead mới" value={stats.newLeads} prefix={<TeamOutlined />} />
         </Card>
         <Card>
-          <Statistic title="Căn nổi bật" value={stats.featured} />
+          <Statistic title="Liên hệ mới" value={stats.newContacts} prefix={<ContactsOutlined />} />
         </Card>
         <Card>
           <Statistic title="Tổng giá trị rao bán" value={stats.totalValue} />
@@ -693,6 +767,32 @@ export function AdminDashboard() {
               scroll={{ x: 1250 }}
               rowClassName={(record) => `lead-${record.status}`}
               locale={{ emptyText: <Empty description="Chưa có khách quan tâm" /> }}
+            />
+          </TableCard>
+
+          <TableCard title="Yêu cầu liên hệ từ website">
+            <FilterBar>
+              <Select
+                value={contactFilter}
+                onChange={setContactFilter}
+                options={[
+                  { label: 'Tất cả liên hệ', value: 'all' },
+                  ...leadStatusOptions
+                ]}
+              />
+            </FilterBar>
+            <Toolbar>
+              <strong>{filteredContacts.length}</strong>
+              <span>yêu cầu liên hệ từ trang contact</span>
+            </Toolbar>
+            <Table
+              rowKey={(record) => record.id || record._id}
+              columns={contactColumns}
+              dataSource={filteredContacts}
+              loading={loading}
+              pagination={{ pageSize: 5 }}
+              scroll={{ x: 1100 }}
+              locale={{ emptyText: <Empty description="Chưa có yêu cầu liên hệ" /> }}
             />
           </TableCard>
         </div>

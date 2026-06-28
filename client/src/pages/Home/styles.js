@@ -51,11 +51,20 @@ export const HeroActions = styled.div`
 `;
 
 export const FeatureCard = styled.div`
+  display: block;
   height: 100%;
   padding: 26px;
   border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 28px;
   background: rgba(255, 255, 255, 0.08);
+  text-decoration: none;
+  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    border-color: rgba(32, 208, 163, 0.42);
+    background: rgba(32, 208, 163, 0.1);
+  }
 
   > .anticon {
     display: grid;

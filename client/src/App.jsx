@@ -16,6 +16,10 @@ const VerifyEmailPage = lazy(() => import('./pages/Auth/VerifyEmailPage.jsx')
   .then((module) => ({ default: module.VerifyEmailPage })));
 const FavoritesPage = lazy(() => import('./pages/Favorites/FavoritesPage.jsx')
   .then((module) => ({ default: module.FavoritesPage })));
+const ContactPage = lazy(() => import('./pages/Contact/ContactPage.jsx')
+  .then((module) => ({ default: module.ContactPage })));
+const AccountPage = lazy(() => import('./pages/Account/AccountPage.jsx')
+  .then((module) => ({ default: module.AccountPage })));
 
 const routerBasename = import.meta.env.BASE_URL === '/'
   ? undefined
@@ -34,6 +38,8 @@ export default function App() {
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/verify-email" element={<VerifyEmailPage />} />
             <Route path="/favorites" element={<FavoritesPage />} />
+            <Route path="/contact" element={<ContactPage />} />
+            <Route path="/account" element={<AccountPage />} />
             <Route path="/admin" element={<AdminDashboard />} />
           </Routes>
         </Suspense>

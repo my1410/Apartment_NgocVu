@@ -9,6 +9,7 @@ import mongoose from 'mongoose';
 import apartmentRoutes from './routes/apartmentRoutes.js';
 import authRoutes from './routes/authRoutes.js';
 import chatRoutes from './routes/chatRoutes.js';
+import contactRoutes from './routes/contactRoutes.js';
 import { errorHandler, notFound } from './middleware/errorMiddleware.js';
 
 export const app = express();
@@ -74,6 +75,7 @@ app.get('/health', (_req, res) => {
 app.use('/api/apartments', apartmentRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/chat', chatRoutes);
+app.use('/api/contact', contactRoutes);
 
 app.use(notFound);
 app.use(errorHandler);

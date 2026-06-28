@@ -79,6 +79,11 @@ export async function getCurrentUser() {
   return data.data;
 }
 
+export async function updateCurrentUser(payload) {
+  const { data } = await api.patch('/auth/me', payload);
+  return data.data;
+}
+
 export async function toggleFavorite(apartmentId) {
   const { data } = await api.post(`/apartments/${apartmentId}/favorite`);
   return data.data;
@@ -101,6 +106,21 @@ export async function getInterests() {
 
 export async function updateInterest(interestId, payload) {
   const { data } = await api.patch(`/apartments/interests/${interestId}`, payload);
+  return data.data;
+}
+
+export async function createContactRequest(payload) {
+  const { data } = await api.post('/contact', payload);
+  return data.data;
+}
+
+export async function getContactRequests() {
+  const { data } = await api.get('/contact');
+  return data.data;
+}
+
+export async function updateContactRequest(contactId, payload) {
+  const { data } = await api.patch(`/contact/${contactId}`, payload);
   return data.data;
 }
 
