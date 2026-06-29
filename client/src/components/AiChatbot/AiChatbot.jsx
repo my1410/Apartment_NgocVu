@@ -1,6 +1,6 @@
 import { Button, Input, List, Space } from 'antd';
 import { CloseOutlined, MessageOutlined, SendOutlined } from '@ant-design/icons';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { askAssistant } from '../../services/apiClient.js';
 import { Bubble, ChatButton, ChatPanel, Composer, Header, Messages, SuggestionBar } from './styles.js';
 
@@ -20,6 +20,7 @@ export function AiChatbot({ apartments = [] }) {
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([welcomeMessage]);
   const [loading, setLoading] = useState(false);
+  const sendingRef = useRef(false);
 
   const context = useMemo(() => ({
     totalApartments: apartments.length,
@@ -44,8 +45,9 @@ export function AiChatbot({ apartments = [] }) {
 
   const sendMessage = async (overrideMessage) => {
     const trimmed = (overrideMessage ?? message).trim();
-    if (!trimmed) return;
+    if (!trimmed || sendingRef.current) return;
 
+    sendingRef.current = true;
     setMessages((current) => [...current, { role: 'user', content: trimmed }]);
     setMessage('');
     setLoading(true);
@@ -53,6 +55,7 @@ export function AiChatbot({ apartments = [] }) {
       const reply = await askAssistant(trimmed, context);
       setMessages((current) => [...current, { role: 'assistant', content: reply }]);
     } finally {
+      sendingRef.current = false;
       setLoading(false);
     }
   };
@@ -85,7 +88,7 @@ export function AiChatbot({ apartments = [] }) {
               onPressEnter={(event) => {
                 if (!event.shiftKey) {
                   event.preventDefault();
-                  sendMessage();
+                  if (!event.repeat) sendMessage();
                 }
               }}
             />
