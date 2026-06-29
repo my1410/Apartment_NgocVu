@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { App as AntdApp, Button, Card, Empty, Spin } from 'antd';
 import { BulbOutlined } from '@ant-design/icons';
+import { useSearchParams } from 'react-router-dom';
 import { ApartmentCard } from '../../components/ApartmentCard/ApartmentCard.jsx';
 import { ApartmentFilters } from '../../components/ApartmentFilters/ApartmentFilters.jsx';
 import { MapView } from '../../components/MapView/MapView.jsx';
@@ -28,11 +29,14 @@ const defaultFilters = {
 
 export function ApartmentsPage() {
   const { message } = AntdApp.useApp();
+  const [searchParams] = useSearchParams();
   const [apartments, setApartments] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState([]);
   const [filters, setFilters] = useState(defaultFilters);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
+  const queryDistrict = searchParams.get('district') || undefined;
+  const queryWard = searchParams.get('ward') || undefined;
 
   useEffect(() => {
     Promise.all([
@@ -46,6 +50,12 @@ export function ApartmentsPage() {
       setLoading(false);
     });
   }, []);
+
+  useEffect(() => {
+    if (queryDistrict || queryWard) {
+      setFilters((current) => ({ ...current, district: queryDistrict, ward: queryWard }));
+    }
+  }, [queryDistrict, queryWard]);
 
   const filteredApartments = useMemo(() => {
     const filtered = apartments.filter((apartment) => {

@@ -91,6 +91,36 @@ export const FeatureCard = styled.div`
   }
 `;
 
+export const NearbyPanel = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 18px;
+  align-items: center;
+  padding: 22px;
+  border: 1px solid rgba(32, 208, 163, 0.24);
+  border-radius: 30px;
+  background:
+    radial-gradient(circle at top left, rgba(32, 208, 163, 0.2), transparent 34%),
+    rgba(255, 255, 255, 0.08);
+
+  strong {
+    display: block;
+    margin-bottom: 6px;
+    color: #ffffff;
+    font-size: 20px;
+  }
+
+  p {
+    margin: 0;
+    color: rgba(231, 238, 251, 0.7);
+    line-height: 1.7;
+  }
+
+  @media (max-width: 760px) {
+    grid-template-columns: 1fr;
+  }
+`;
+
 export const Section = styled.section`
   width: min(1440px, calc(100% - 40px));
   margin: 86px auto 0;
