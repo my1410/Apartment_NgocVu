@@ -40,14 +40,20 @@ function detectDistrict(message) {
     ['son-tra', ['son tra', 'sontra']],
     ['ngu-hanh-son', ['ngu hanh son', 'nguhanhson', 'my khe', 'my an']],
     ['thanh-khe', ['thanh khe', 'thanhkhe', 'san bay']],
-    ['lien-chieu', ['lien chieu', 'lienchieu', 'hoa khanh']]
+    ['lien-chieu', ['lien chieu', 'lienchieu', 'hoa khanh']],
+    ['cam-le', ['cam le', 'camle', 'khue trung']]
   ];
   return districtMap.find(([, keywords]) => keywords.some((keyword) => normalized.includes(keyword)))?.[0];
 }
 
+function isGreeting(message) {
+  const normalized = normalizeText(message).trim();
+  return /^(hi|hello|hey|chao|xin chao|chao ban)(\s|!|\.|,)?$/.test(normalized);
+}
+
 function detectBudget(message) {
   const normalized = normalizeText(message);
-  const underMatch = normalized.match(/(?:duoi|toi da|tam|khoang)\s*(\d+(?:[.,]\d+)?)\s*(?:ty|ti)/);
+  const underMatch = normalized.match(/(?:duoi|toi da|tam|khoang|max)\s*(\d+(?:[.,]\d+)?)\s*(?:ty|ti)/);
   if (underMatch) return Number(underMatch[1].replace(',', '.')) * 1000000000;
 
   const numberMatch = normalized.match(/(\d+(?:[.,]\d+)?)\s*(?:ty|ti)/);
@@ -89,6 +95,10 @@ function scoreApartment(apartment, preferences) {
 }
 
 async function localReply(message, context = {}) {
+  if (isGreeting(message)) {
+    return 'Chào bạn, mình đây. Bạn muốn tìm căn theo quận nào, ngân sách khoảng bao nhiêu và cần mấy phòng ngủ?';
+  }
+
   const preferences = {
     district: detectDistrict(message),
     budget: detectBudget(message),

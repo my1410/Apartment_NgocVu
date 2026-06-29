@@ -49,9 +49,12 @@ export function AiChatbot({ apartments = [] }) {
     setMessages((current) => [...current, { role: 'user', content: trimmed }]);
     setMessage('');
     setLoading(true);
-    const reply = await askAssistant(trimmed, context);
-    setMessages((current) => [...current, { role: 'assistant', content: reply }]);
-    setLoading(false);
+    try {
+      const reply = await askAssistant(trimmed, context);
+      setMessages((current) => [...current, { role: 'assistant', content: reply }]);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
