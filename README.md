@@ -96,6 +96,49 @@ npm run dev
 
 Frontend chạy ở `http://localhost:5173`, API chạy ở `http://localhost:4000`.
 
+## Chạy bằng Docker
+
+Yêu cầu có Docker Desktop hoặc Docker Engine + Compose.
+
+```bash
+cp .env.docker.example .env.docker
+docker compose --env-file .env.docker up --build
+```
+
+Sau khi container chạy:
+
+```text
+Frontend: http://localhost:8080
+API:      http://localhost:4000
+MongoDB:  mongodb://localhost:27017/apartment_platform
+```
+
+Seed dữ liệu mẫu và tài khoản admin:
+
+```bash
+docker compose --env-file .env.docker run --rm server npm run seed --workspace server
+```
+
+Tài khoản admin mẫu:
+
+```text
+admin@example.com
+Admin@123456
+```
+
+Nếu muốn bật Google Map hoặc OpenAI thật, sửa `.env.docker`:
+
+```text
+VITE_GOOGLE_MAPS_API_KEY=your-google-map-key
+OPENAI_API_KEY=sk-...
+```
+
+Sau đó build lại:
+
+```bash
+docker compose --env-file .env.docker up --build
+```
+
 ## Seed MongoDB
 
 Bật MongoDB local trước, rồi chạy:

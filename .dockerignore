@@ -1,0 +1,15 @@
+.git
+.github
+.DS_Store
+node_modules
+client/node_modules
+server/node_modules
+client/dist
+npm-debug.log*
+.env
+.env.docker
+client/.env
+server/.env
+coverage
+.cache
+.vite
