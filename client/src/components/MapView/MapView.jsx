@@ -79,11 +79,6 @@ function OpenStreetMapView({ markers }) {
             message="Chưa có tọa độ cho căn hộ này."
           />
         )}
-        <Alert
-          type="info"
-          showIcon
-          message="Đang dùng OpenStreetMap vì chưa cấu hình VITE_GOOGLE_MAPS_API_KEY. Thêm Google key vào client/.env để bật Google Map nhúng."
-        />
       </Space>
     </MapCard>
   );
