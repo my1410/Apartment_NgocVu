@@ -84,6 +84,16 @@ export async function updateCurrentUser(payload) {
   return data.data;
 }
 
+export async function updatePassword(payload) {
+  const { data } = await api.patch('/auth/password', payload);
+  return data;
+}
+
+export async function resendVerificationEmail() {
+  const { data } = await api.post('/auth/resend-verification');
+  return data;
+}
+
 export async function toggleFavorite(apartmentId) {
   const { data } = await api.post(`/apartments/${apartmentId}/favorite`);
   return data.data;

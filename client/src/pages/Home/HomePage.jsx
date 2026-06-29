@@ -49,10 +49,10 @@ export function HomePage() {
             </FeatureCard>
           </Col>
           <Col xs={24} md={8}>
-            <FeatureCard as={Link} to="/account">
+            <FeatureCard as={Link} to="/account#security">
               <SafetyCertificateOutlined />
               <h3>Bảo mật tài khoản</h3>
-              <p>Đăng ký bằng email, số điện thoại, địa chỉ; có xác nhận email và cookie HTTP-only.</p>
+              <p>Xác minh email, cookie HTTP-only và đổi mật khẩu trong trung tâm bảo mật tài khoản.</p>
             </FeatureCard>
           </Col>
         </Row>

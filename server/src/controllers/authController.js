@@ -38,6 +38,14 @@ const updateProfileSchema = z.object({
   }).optional()
 });
 
+const updatePasswordSchema = z.object({
+  currentPassword: z.string().min(8),
+  newPassword: z.string().min(8)
+}).refine((value) => value.currentPassword !== value.newPassword, {
+  message: 'Mật khẩu mới phải khác mật khẩu hiện tại.',
+  path: ['newPassword']
+});
+
 function serializeUser(user) {
   const raw = user.toObject ? user.toObject() : user;
   return {
@@ -50,6 +58,12 @@ function serializeUser(user) {
     emailVerified: raw.emailVerified,
     createdAt: raw.createdAt
   };
+}
+
+function getClientUrl(req) {
+  const origin = req.get('origin');
+  if (origin) return origin;
+  return (process.env.CLIENT_URL || 'http://127.0.0.1:5173').split(',')[0].trim();
 }
 
 export async function register(req, res, next) {
@@ -73,7 +87,7 @@ export async function register(req, res, next) {
       emailVerificationExpires: new Date(Date.now() + 24 * 60 * 60 * 1000)
     });
 
-    const emailResult = await sendVerificationEmail({ to: user.email, token, clientUrl: req.get('origin') });
+    const emailResult = await sendVerificationEmail({ to: user.email, token, clientUrl: getClientUrl(req) });
     const authToken = signAuthToken(user);
     res.cookie('token', authToken, authCookieOptions());
     res.status(201).json({
@@ -134,6 +148,55 @@ export async function updateMe(req, res, next) {
 
     await user.save();
     res.json({ data: serializeUser(user) });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function updatePassword(req, res, next) {
+  try {
+    const payload = updatePasswordSchema.parse(req.body);
+    const user = await User.findById(req.user._id).select('+password');
+    if (!user || !(await user.comparePassword(payload.currentPassword))) {
+      res.status(401);
+      throw new Error('Mật khẩu hiện tại không đúng.');
+    }
+
+    user.password = payload.newPassword;
+    await user.save();
+    res.json({ message: 'Đã đổi mật khẩu thành công.' });
+  } catch (error) {
+    next(error);
+  }
+}
+
+export async function resendVerificationEmail(req, res, next) {
+  try {
+    const user = await User.findById(req.user._id).select('+emailVerificationToken +emailVerificationExpires');
+    if (!user) {
+      res.status(404);
+      throw new Error('Không tìm thấy tài khoản.');
+    }
+
+    if (user.emailVerified) {
+      return res.json({ message: 'Email của bạn đã được xác thực.' });
+    }
+
+    const token = crypto.randomBytes(32).toString('hex');
+    user.emailVerificationToken = crypto.createHash('sha256').update(token).digest('hex');
+    user.emailVerificationExpires = new Date(Date.now() + 24 * 60 * 60 * 1000);
+    await user.save();
+
+    const emailResult = await sendVerificationEmail({ to: user.email, token, clientUrl: getClientUrl(req) });
+    res.json({
+      message: emailResult.sent
+        ? 'Đã gửi email xác minh mới.'
+        : 'Chưa cấu hình SMTP, dùng link xác minh dev để test.',
+      data: {
+        sent: emailResult.sent,
+        verificationPreviewUrl: emailResult.previewUrl
+      }
+    });
   } catch (error) {
     next(error);
   }

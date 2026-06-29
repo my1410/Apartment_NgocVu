@@ -60,3 +60,34 @@ export const AccountActionGrid = styled.div`
     width: 100%;
   }
 `;
+
+export const AccountSideStack = styled.div`
+  display: grid;
+  gap: 24px;
+`;
+
+export const SecurityList = styled.div`
+  display: grid;
+  gap: 12px;
+  margin: 18px 0 22px;
+`;
+
+export const SecurityItem = styled.div`
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+  padding: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 18px;
+  background: rgba(3, 12, 24, 0.28);
+
+  strong {
+    display: block;
+    color: #ffffff;
+  }
+
+  small {
+    color: rgba(231, 238, 251, 0.58);
+  }
+`;

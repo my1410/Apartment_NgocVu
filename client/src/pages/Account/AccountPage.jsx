@@ -1,16 +1,40 @@
 import { useEffect, useState } from 'react';
 import { App as AntdApp, Button, Form, Input, Spin, Tag } from 'antd';
-import { HomeOutlined, MailOutlined, PhoneOutlined, UserOutlined } from '@ant-design/icons';
-import { Link, useNavigate } from 'react-router-dom';
-import { getCurrentUser, logout, updateCurrentUser } from '../../services/apiClient.js';
-import { AccountActionGrid, AccountPageWrap, AccountPanel } from './styles.js';
+import {
+  HomeOutlined,
+  LockOutlined,
+  MailOutlined,
+  PhoneOutlined,
+  SafetyCertificateOutlined,
+  UserOutlined
+} from '@ant-design/icons';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import {
+  getCurrentUser,
+  logout,
+  resendVerificationEmail,
+  updateCurrentUser,
+  updatePassword
+} from '../../services/apiClient.js';
+import {
+  AccountActionGrid,
+  AccountPageWrap,
+  AccountPanel,
+  AccountSideStack,
+  SecurityItem,
+  SecurityList
+} from './styles.js';
 
 export function AccountPage() {
   const [form] = Form.useForm();
-  const { message } = AntdApp.useApp();
+  const [securityForm] = Form.useForm();
+  const { message, modal } = AntdApp.useApp();
   const navigate = useNavigate();
+  const location = useLocation();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [securityLoading, setSecurityLoading] = useState(false);
+  const [verificationLoading, setVerificationLoading] = useState(false);
 
   useEffect(() => {
     getCurrentUser()
@@ -32,6 +56,12 @@ export function AccountPage() {
       })
       .finally(() => setLoading(false));
   }, [form, message, navigate]);
+
+  useEffect(() => {
+    if (!loading && location.hash === '#security') {
+      document.getElementById('security')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  }, [loading, location.hash]);
 
   const handleSubmit = async (values) => {
     try {
@@ -55,6 +85,45 @@ export function AccountPage() {
   const handleLogout = async () => {
     await logout();
     navigate('/login', { replace: true });
+  };
+
+  const handlePasswordSubmit = async (values) => {
+    setSecurityLoading(true);
+    try {
+      await updatePassword({
+        currentPassword: values.currentPassword,
+        newPassword: values.newPassword
+      });
+      securityForm.resetFields();
+      message.success('Đã đổi mật khẩu. Lần đăng nhập sau hãy dùng mật khẩu mới.');
+    } catch (error) {
+      message.error(error.response?.data?.message || 'Không thể đổi mật khẩu.');
+    } finally {
+      setSecurityLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setVerificationLoading(true);
+    try {
+      const result = await resendVerificationEmail();
+      message.success(result.message || 'Đã gửi lại email xác minh.');
+      if (result.data?.verificationPreviewUrl) {
+        modal.info({
+          title: 'Link xác minh email môi trường dev',
+          content: (
+            <div>
+              <p>Chưa cấu hình SMTP, dùng link này để test xác minh email:</p>
+              <a href={result.data.verificationPreviewUrl}>{result.data.verificationPreviewUrl}</a>
+            </div>
+          )
+        });
+      }
+    } catch (error) {
+      message.error(error.response?.data?.message || 'Không thể gửi lại email xác minh.');
+    } finally {
+      setVerificationLoading(false);
+    }
   };
 
   if (loading) {
@@ -101,31 +170,94 @@ export function AccountPage() {
         </Form>
       </AccountPanel>
 
-      <AccountPanel>
-        <span>Tổng quan</span>
-        <h2>{user?.name || user?.email}</h2>
-        <p>{user?.email}</p>
-        <p>
-          Trạng thái email:{' '}
-          {user?.emailVerified ? <Tag color="green">Đã xác thực</Tag> : <Tag color="orange">Chưa xác thực</Tag>}
-        </p>
-        <AccountActionGrid>
-          <Button type="primary" size="large">
-            <Link to="/favorites">Quản lý căn hộ ưa thích</Link>
-          </Button>
-          <Button size="large">
-            <Link to="/contact">Gửi yêu cầu tư vấn</Link>
-          </Button>
-          {user?.role === 'admin' && (
+      <AccountSideStack>
+        <AccountPanel>
+          <span>Tổng quan</span>
+          <h2>{user?.name || user?.email}</h2>
+          <p>{user?.email}</p>
+          <p>
+            Trạng thái email:{' '}
+            {user?.emailVerified ? <Tag color="green">Đã xác thực</Tag> : <Tag color="orange">Chưa xác thực</Tag>}
+          </p>
+          <AccountActionGrid>
+            <Button type="primary" size="large">
+              <Link to="/favorites">Quản lý căn hộ ưa thích</Link>
+            </Button>
             <Button size="large">
-              <Link to="/admin">Vào trang admin</Link>
+              <Link to="/contact">Gửi yêu cầu tư vấn</Link>
+            </Button>
+            {user?.role === 'admin' && (
+              <Button size="large">
+                <Link to="/admin">Vào trang admin</Link>
+              </Button>
+            )}
+            <Button danger size="large" onClick={handleLogout}>
+              Đăng xuất
+            </Button>
+          </AccountActionGrid>
+        </AccountPanel>
+
+        <AccountPanel id="security">
+          <span>Bảo mật tài khoản</span>
+          <h2><SafetyCertificateOutlined /> Trung tâm bảo mật</h2>
+          <p>Kiểm tra xác minh email, cookie đăng nhập HTTP-only và đổi mật khẩu khách hàng.</p>
+          <SecurityList>
+            <SecurityItem>
+              <div>
+                <strong>Email xác minh</strong>
+                <small>{user?.email}</small>
+              </div>
+              {user?.emailVerified ? <Tag color="green">Đã xác thực</Tag> : <Tag color="orange">Chưa xác thực</Tag>}
+            </SecurityItem>
+            <SecurityItem>
+              <div>
+                <strong>Phiên đăng nhập</strong>
+                <small>JWT được lưu trong signed HTTP-only cookie</small>
+              </div>
+              <Tag color="blue">Đang bảo vệ</Tag>
+            </SecurityItem>
+          </SecurityList>
+
+          {!user?.emailVerified && (
+            <Button
+              block
+              icon={<MailOutlined />}
+              loading={verificationLoading}
+              onClick={handleResendVerification}
+            >
+              Gửi lại email xác minh
             </Button>
           )}
-          <Button danger size="large" onClick={handleLogout}>
-            Đăng xuất
-          </Button>
-        </AccountActionGrid>
-      </AccountPanel>
+
+          <Form form={securityForm} layout="vertical" onFinish={handlePasswordSubmit} style={{ marginTop: 18 }}>
+            <Form.Item name="currentPassword" label="Mật khẩu hiện tại" rules={[{ required: true, min: 8 }]}>
+              <Input.Password prefix={<LockOutlined />} placeholder="Nhập mật khẩu hiện tại" />
+            </Form.Item>
+            <Form.Item name="newPassword" label="Mật khẩu mới" rules={[{ required: true, min: 8 }]}>
+              <Input.Password prefix={<LockOutlined />} placeholder="Tối thiểu 8 ký tự" />
+            </Form.Item>
+            <Form.Item
+              name="confirmPassword"
+              label="Nhập lại mật khẩu mới"
+              dependencies={['newPassword']}
+              rules={[
+                { required: true, min: 8 },
+                ({ getFieldValue }) => ({
+                  validator(_, value) {
+                    if (!value || getFieldValue('newPassword') === value) return Promise.resolve();
+                    return Promise.reject(new Error('Mật khẩu nhập lại chưa khớp.'));
+                  }
+                })
+              ]}
+            >
+              <Input.Password prefix={<LockOutlined />} placeholder="Nhập lại mật khẩu mới" />
+            </Form.Item>
+            <Button type="primary" htmlType="submit" block loading={securityLoading}>
+              Đổi mật khẩu
+            </Button>
+          </Form>
+        </AccountPanel>
+      </AccountSideStack>
     </AccountPageWrap>
   );
 }
