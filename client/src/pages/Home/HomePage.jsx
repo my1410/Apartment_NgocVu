@@ -1,15 +1,17 @@
 import { useEffect, useMemo, useState } from 'react';
-import { App as AntdApp, Button, Card, Col, Empty, Row, Space, Spin } from 'antd';
+import { App as AntdApp, Button, Empty, Space, Spin } from 'antd';
 import {
   ArrowRightOutlined,
+  BarChartOutlined,
   CustomerServiceOutlined,
   EnvironmentOutlined,
   HeartOutlined,
+  HomeOutlined,
   SafetyCertificateOutlined
 } from '@ant-design/icons';
 import { Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
 import { ApartmentCard } from '../../components/ApartmentCard/ApartmentCard.jsx';
-import { FeaturedStats } from '../../components/FeaturedStats/FeaturedStats.jsx';
 import { SectionHeader } from '../../components/SectionHeader/SectionHeader.jsx';
 import {
   createInterest,
@@ -19,7 +21,55 @@ import {
   toggleFavorite
 } from '../../services/apiClient.js';
 import { resolveAddressLocation, scoreApartmentByAddress } from '../../utils/locationMatch.js';
-import { ApartmentGrid, FeatureCard, HeroActions, HomeHero, HomeWrap, NearbyPanel, Section } from './styles.js';
+import {
+  ApartmentGrid,
+  ContactCard,
+  FeatureCard,
+  FeatureGrid,
+  HeroActions,
+  HeroCopy,
+  HeroMetric,
+  HeroMetrics,
+  HeroOrbit,
+  HeroPreview,
+  HomeHero,
+  HomeWrap,
+  NearbyPanel,
+  Section,
+  VisualCard
+} from './styles.js';
+
+const reveal = {
+  hidden: { opacity: 0, y: 26 },
+  visible: { opacity: 1, y: 0 }
+};
+
+const heroStats = [
+  { icon: <HomeOutlined />, label: 'Căn hộ chọn lọc', value: '128+' },
+  { icon: <BarChartOutlined />, label: 'Khu vực hỗ trợ', value: '42' },
+  { icon: <SafetyCertificateOutlined />, label: 'Tin xác thực', value: '96%' }
+];
+
+const features = [
+  {
+    to: '/apartments',
+    icon: <EnvironmentOutlined />,
+    title: 'Lọc theo khu vực',
+    description: 'Chọn quận, phường, giá, diện tích và trạng thái còn hàng trong một màn hình gọn.'
+  },
+  {
+    to: '/favorites',
+    icon: <HeartOutlined />,
+    title: 'Căn hộ ưa thích',
+    description: 'Lưu căn phù hợp, gửi tín hiệu cho admin và nhận tư vấn theo nhu cầu thật.'
+  },
+  {
+    to: '/account#security',
+    icon: <SafetyCertificateOutlined />,
+    title: 'Bảo mật tài khoản',
+    description: 'Email xác thực, cookie HTTP-only và trung tâm đổi mật khẩu cho khách hàng.'
+  }
+];
 
 export function HomePage() {
   const { message } = AntdApp.useApp();
@@ -76,26 +126,74 @@ export function HomePage() {
 
   return (
     <HomeWrap>
-      <HomeHero>
-        <span>DN Apartment Hub</span>
-        <h1>Đối tác tìm căn hộ hiện đại tại Đà Nẵng.</h1>
-        <p>
-          Chúng tôi kết nối khách hàng với căn hộ đã chọn lọc theo vị trí, pháp lý, ngân sách,
-          bản đồ và nhu cầu sống thực tế. Tất cả được tối ưu bằng dữ liệu, AI gợi ý và đội ngũ tư vấn địa phương.
-        </p>
-        <HeroActions>
-          <Button type="primary" size="large" icon={<ArrowRightOutlined />}>
-            <Link to="/apartments">Xem danh mục căn hộ</Link>
-          </Button>
-          <Button size="large">
-            <Link to="/contact">Liên hệ tư vấn</Link>
-          </Button>
-        </HeroActions>
+      <HomeHero
+        initial="hidden"
+        animate="visible"
+        variants={reveal}
+        transition={{ duration: 0.65, ease: 'easeOut' }}
+      >
+        <HeroCopy>
+          <span>DN Apartment Hub</span>
+          <h1>Tìm căn hộ Đà Nẵng nhanh, đẹp và đúng khu vực.</h1>
+          <p>
+            Nền tảng gợi ý căn hộ theo vị trí, ngân sách, bản đồ, tồn kho và nhu cầu thực tế.
+            Trải nghiệm được tối ưu để khách hàng xem nhanh, lưu nhanh và gửi nhu cầu cho admin ngay.
+          </p>
+          <HeroActions>
+            <Button type="primary" size="large" icon={<ArrowRightOutlined />}>
+              <Link to="/apartments">Xem danh mục căn hộ</Link>
+            </Button>
+            <Button size="large">
+              <Link to="/contact">Liên hệ tư vấn</Link>
+            </Button>
+          </HeroActions>
+          <HeroMetrics>
+            {heroStats.map((item) => (
+              <HeroMetric key={item.label}>
+                {item.icon}
+                <strong>{item.value}</strong>
+                <span>{item.label}</span>
+              </HeroMetric>
+            ))}
+          </HeroMetrics>
+        </HeroCopy>
+
+        <HeroPreview>
+          <HeroOrbit />
+          <VisualCard
+            initial={{ opacity: 0, y: 30, rotate: -2 }}
+            animate={{ opacity: 1, y: 0, rotate: 0 }}
+            transition={{ duration: 0.75, delay: 0.18, ease: 'easeOut' }}
+          >
+            <span>AI gợi ý hôm nay</span>
+            <h2>Hải Châu ven sông</h2>
+            <p>2 phòng ngủ • 78m2 • view sông Hàn • còn 1 căn tư vấn</p>
+            <div>
+              <small>Độ phù hợp</small>
+              <strong>96%</strong>
+            </div>
+          </VisualCard>
+          <VisualCard
+            $compact
+            initial={{ opacity: 0, y: 24, rotate: 3 }}
+            animate={{ opacity: 1, y: 0, rotate: 0 }}
+            transition={{ duration: 0.75, delay: 0.32, ease: 'easeOut' }}
+          >
+            <span>Bản đồ & tồn kho</span>
+            <h2>2 vị trí gần bạn</h2>
+            <p>Lọc theo địa chỉ đăng ký và trạng thái còn hàng.</p>
+          </VisualCard>
+        </HeroPreview>
       </HomeHero>
 
-      <FeaturedStats />
-
-      <Section>
+      <Section
+        as={motion.section}
+        variants={reveal}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: '-80px' }}
+        transition={{ duration: 0.55 }}
+      >
         <SectionHeader
           eyebrow="Căn hộ gần bạn"
           title="Gợi ý theo địa chỉ đăng ký của tài khoản"
@@ -149,52 +247,62 @@ export function HomePage() {
         )}
       </Section>
 
-      <Section>
+      <Section
+        as={motion.section}
+        variants={reveal}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: '-80px' }}
+        transition={{ duration: 0.55 }}
+      >
         <SectionHeader
           eyebrow="Tính năng nổi bật"
-          title="Một nền tảng căn hộ gọn, nhanh và có dữ liệu rõ ràng"
-          description="Tìm theo quận/phường, xem vị trí trên map, lưu căn hộ yêu thích và gửi nhu cầu để tư vấn viên liên hệ."
+          title="Đủ chức năng quan trọng, trình bày sạch và dễ dùng"
+          description="Trang chủ chỉ giữ những điểm cần ra quyết định. Các thao tác chi tiết được đưa về danh mục, tài khoản và liên hệ."
         />
-        <Row gutter={[18, 18]}>
-          <Col xs={24} md={8}>
-            <FeatureCard as={Link} to="/apartments">
-              <EnvironmentOutlined />
-              <h3>Lọc theo khu vực</h3>
-              <p>Chọn Hải Châu, Sơn Trà, Ngũ Hành Sơn hoặc từng phường để xem đúng căn hộ trong khu vực.</p>
+        <FeatureGrid>
+          {features.map((feature, index) => (
+            <FeatureCard
+              key={feature.title}
+              as={motion(Link)}
+              to={feature.to}
+              initial={{ opacity: 0, y: 22 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true, margin: '-80px' }}
+              transition={{ duration: 0.45, delay: index * 0.08 }}
+            >
+              {feature.icon}
+              <h3>{feature.title}</h3>
+              <p>{feature.description}</p>
             </FeatureCard>
-          </Col>
-          <Col xs={24} md={8}>
-            <FeatureCard as={Link} to="/favorites">
-              <HeartOutlined />
-              <h3>Căn hộ ưa thích</h3>
-              <p>Lưu căn hộ bạn quan tâm, gửi tín hiệu cho admin và nhận tư vấn dựa trên nhu cầu thật.</p>
-            </FeatureCard>
-          </Col>
-          <Col xs={24} md={8}>
-            <FeatureCard as={Link} to="/account#security">
-              <SafetyCertificateOutlined />
-              <h3>Bảo mật tài khoản</h3>
-              <p>Xác minh email, cookie HTTP-only và đổi mật khẩu trong trung tâm bảo mật tài khoản.</p>
-            </FeatureCard>
-          </Col>
-        </Row>
+          ))}
+        </FeatureGrid>
       </Section>
 
-      <Section id="contact">
-        <Card>
-          <Space direction="vertical" size={14}>
-            <SectionHeader
-              eyebrow="Liên hệ"
-              title="Cần tư vấn căn hộ phù hợp?"
-              description="Để lại căn hộ yêu thích trong danh mục, admin sẽ thấy nhu cầu và liên hệ lại theo thông tin tài khoản của bạn."
-            />
-            <p><CustomerServiceOutlined /> Hotline: 0900 000 000</p>
-            <p>Email: support@dnapartmenthub.vn</p>
+      <Section
+        id="contact"
+        as={motion.section}
+        variants={reveal}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: '-80px' }}
+        transition={{ duration: 0.55 }}
+      >
+        <ContactCard>
+          <div>
+            <span>Liên hệ</span>
+            <h2>Cần tư vấn căn hộ phù hợp?</h2>
+            <p>
+              Lưu căn hộ bạn thích hoặc gửi yêu cầu, admin sẽ nhận được thông tin và liên hệ lại theo tài khoản của bạn.
+            </p>
+          </div>
+          <Space wrap>
+            <p><CustomerServiceOutlined /> 0900 000 000</p>
             <Button type="primary">
               <Link to="/contact">Gửi yêu cầu tư vấn</Link>
             </Button>
           </Space>
-        </Card>
+        </ContactCard>
       </Section>
     </HomeWrap>
   );
