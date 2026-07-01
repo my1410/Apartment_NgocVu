@@ -44,6 +44,8 @@ const reveal = {
   visible: { opacity: 1, y: 0 }
 };
 
+const MotionLink = motion.create(Link);
+
 const heroStats = [
   { icon: <HomeOutlined />, label: 'Căn hộ chọn lọc', value: '128+' },
   { icon: <BarChartOutlined />, label: 'Khu vực hỗ trợ', value: '42' },
@@ -264,7 +266,7 @@ export function HomePage() {
           {features.map((feature, index) => (
             <FeatureCard
               key={feature.title}
-              as={motion(Link)}
+              as={MotionLink}
               to={feature.to}
               initial={{ opacity: 0, y: 22 }}
               whileInView={{ opacity: 1, y: 0 }}
