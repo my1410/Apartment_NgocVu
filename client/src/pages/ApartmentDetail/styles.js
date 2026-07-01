@@ -72,36 +72,37 @@ export const GlassPanel = styled.section`
   display: grid;
   gap: 22px;
   padding: 26px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--border-soft);
   border-radius: 30px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface);
+  box-shadow: 0 24px 80px var(--shadow-soft);
 
   h2 {
     margin: 0;
-    color: #ffffff;
+    color: var(--text-heading);
   }
 
   p {
     margin: 0;
-    color: rgba(231, 238, 251, 0.86);
+    color: var(--text-main);
     line-height: 1.75;
   }
 
   .ant-descriptions-view,
   .ant-descriptions-item-label,
   .ant-descriptions-item-content {
-    border-color: rgba(255, 255, 255, 0.12) !important;
+    border-color: var(--border-soft) !important;
   }
 
   .ant-descriptions-item-label {
-    color: rgba(231, 238, 251, 0.78) !important;
-    background: rgba(255, 255, 255, 0.06) !important;
+    color: var(--text-muted) !important;
+    background: color-mix(in srgb, var(--surface-strong) 78%, transparent) !important;
     font-weight: 800;
   }
 
   .ant-descriptions-item-content {
-    color: #ffffff !important;
-    background: rgba(255, 255, 255, 0.03) !important;
+    color: var(--text-heading) !important;
+    background: color-mix(in srgb, var(--surface) 72%, transparent) !important;
   }
 
   @media (max-width: 640px) {
@@ -114,8 +115,8 @@ export const GalleryShell = styled.div`
   min-width: 0;
   overflow: hidden;
   border-radius: 30px;
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid var(--border-soft);
+  background: var(--surface);
 
   .ant-carousel .slick-dots {
     bottom: 22px;
