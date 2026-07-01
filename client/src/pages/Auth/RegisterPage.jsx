@@ -2,10 +2,12 @@ import { App as AntdApp, Button, Form, Input } from 'antd';
 import { HomeOutlined, LockOutlined, MailOutlined, PhoneOutlined, UserOutlined } from '@ant-design/icons';
 import { Link, useNavigate } from 'react-router-dom';
 import { register } from '../../services/apiClient.js';
+import { usePreferences } from '../../context/AppPreferences.jsx';
 import { LoginCard, LoginPageWrap } from './styles.js';
 
 export function RegisterPage() {
   const { message, modal } = AntdApp.useApp();
+  const { t } = usePreferences();
   const navigate = useNavigate();
 
   const handleSubmit = async (values) => {
@@ -23,13 +25,13 @@ export function RegisterPage() {
         }
       });
 
-      message.success('Đăng ký thành công. Vui lòng xác nhận email.');
+      message.success(t('auth.registerSuccess'));
       if (data.verificationPreviewUrl) {
         modal.info({
-          title: 'Link xác nhận email môi trường dev',
+          title: t('auth.devVerificationTitle'),
           content: (
             <div>
-              <p>Chưa cấu hình SMTP, dùng link này để test xác nhận email:</p>
+              <p>{t('auth.devVerificationText')}</p>
               <a href={data.verificationPreviewUrl}>{data.verificationPreviewUrl}</a>
             </div>
           )
@@ -37,47 +39,47 @@ export function RegisterPage() {
       }
       navigate('/apartments', { replace: true });
     } catch (error) {
-      message.error(error.response?.data?.message || 'Đăng ký thất bại.');
+      message.error(error.response?.data?.message || t('auth.registerError'));
     }
   };
 
   return (
     <LoginPageWrap>
       <LoginCard>
-        <span>Tài khoản khách hàng</span>
-        <h1>Đăng ký</h1>
-        <p>Tạo tài khoản để lưu căn hộ ưa thích, gửi nhu cầu cho admin và nhận tư vấn.</p>
+        <span>{t('auth.registerBadge')}</span>
+        <h1>{t('auth.registerTitle')}</h1>
+        <p>{t('auth.registerDescription')}</p>
         <Form layout="vertical" onFinish={handleSubmit}>
-          <Form.Item name="name" label="Họ tên" rules={[{ required: true, min: 2 }]}>
-            <Input prefix={<UserOutlined />} placeholder="Nguyễn Văn A" />
+          <Form.Item name="name" label={t('auth.name')} rules={[{ required: true, min: 2 }]}>
+            <Input prefix={<UserOutlined />} placeholder={t('auth.placeholderName')} />
           </Form.Item>
           <Form.Item name="email" label="Gmail" rules={[{ required: true, type: 'email' }]}>
             <Input prefix={<MailOutlined />} placeholder="you@gmail.com" />
           </Form.Item>
-          <Form.Item name="password" label="Mật khẩu" rules={[{ required: true, min: 8 }]}>
-            <Input.Password prefix={<LockOutlined />} placeholder="Tối thiểu 8 ký tự" />
+          <Form.Item name="password" label={t('auth.password')} rules={[{ required: true, min: 8 }]}>
+            <Input.Password prefix={<LockOutlined />} placeholder={t('auth.minPassword')} />
           </Form.Item>
-          <Form.Item name="phone" label="Số điện thoại" rules={[{ required: true, min: 8 }]}>
+          <Form.Item name="phone" label={t('auth.phone')} rules={[{ required: true, min: 8 }]}>
             <Input prefix={<PhoneOutlined />} placeholder="0900000000" />
           </Form.Item>
-          <Form.Item name="street" label="Địa chỉ nơi ở" rules={[{ required: true, min: 2 }]}>
-            <Input prefix={<HomeOutlined />} placeholder="Số nhà, tên đường" />
+          <Form.Item name="street" label={t('auth.street')} rules={[{ required: true, min: 2 }]}>
+            <Input prefix={<HomeOutlined />} placeholder={t('auth.placeholderStreet')} />
           </Form.Item>
-          <Form.Item name="ward" label="Phường/Xã">
-            <Input placeholder="Hải Châu I" />
+          <Form.Item name="ward" label={t('auth.ward')}>
+            <Input placeholder={t('auth.placeholderWard')} />
           </Form.Item>
-          <Form.Item name="district" label="Quận/Huyện">
-            <Input placeholder="Hải Châu" />
+          <Form.Item name="district" label={t('auth.district')}>
+            <Input placeholder={t('auth.placeholderDistrict')} />
           </Form.Item>
-          <Form.Item name="city" label="Tỉnh/Thành phố" initialValue="Đà Nẵng">
+          <Form.Item name="city" label={t('auth.city')} initialValue="Đà Nẵng">
             <Input />
           </Form.Item>
           <Button type="primary" htmlType="submit" block>
-            Tạo tài khoản
+            {t('auth.createAccount')}
           </Button>
         </Form>
         <p>
-          Đã có tài khoản? <Link to="/login">Đăng nhập</Link>
+          {t('auth.hasAccount')} <Link to="/login">{t('common.login')}</Link>
         </p>
       </LoginCard>
     </LoginPageWrap>

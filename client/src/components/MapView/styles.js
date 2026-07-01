@@ -7,10 +7,10 @@ export const MapCard = styled.div`
   grid-template-columns: minmax(0, 1fr);
   gap: 16px;
   padding: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--border-soft);
   border-radius: 32px;
-  background: rgba(255, 255, 255, 0.08);
-  box-shadow: 0 22px 70px rgba(0, 0, 0, 0.18);
+  background: var(--surface);
+  box-shadow: 0 22px 70px var(--shadow-soft);
 
   .ant-alert {
     border-color: rgba(32, 208, 163, 0.32);
@@ -53,13 +53,13 @@ export const MapToolbar = styled.div`
 
   span {
     display: block;
-    color: rgba(231, 238, 251, 0.64);
+    color: var(--text-soft);
     font-size: 13px;
     font-weight: 700;
   }
 
   strong {
-    color: #ffffff;
+    color: var(--text-heading);
     font-size: 22px;
   }
 

@@ -1,14 +1,15 @@
 import { useEffect } from 'react';
 import { App as AntdApp, Button, Form, Input, Select } from 'antd';
 import { CustomerServiceOutlined, MailOutlined, PhoneOutlined, UserOutlined } from '@ant-design/icons';
-import { Link } from 'react-router-dom';
 import { daNangLocations } from '../../data/vietnamLocations.js';
 import { createContactRequest, getCurrentUser } from '../../services/apiClient.js';
+import { usePreferences } from '../../context/AppPreferences.jsx';
 import { ContactCard, ContactHero, ContactInfoGrid, ContactPageWrap } from './styles.js';
 
 export function ContactPage() {
   const [form] = Form.useForm();
   const { message } = AntdApp.useApp();
+  const { t } = usePreferences();
 
   useEffect(() => {
     getCurrentUser()
@@ -26,64 +27,62 @@ export function ContactPage() {
   const handleSubmit = async (values) => {
     try {
       await createContactRequest(values);
-      message.success('Đã gửi yêu cầu tư vấn. Admin sẽ thấy trong CRM liên hệ.');
+      message.success(t('contact.sent'));
       form.resetFields(['budget', 'message']);
     } catch (error) {
-      message.error(error.response?.data?.message || 'Không thể gửi liên hệ.');
+      message.error(error.response?.data?.message || t('contact.error'));
     }
   };
 
   return (
     <ContactPageWrap>
       <ContactHero>
-        <span>Tư vấn căn hộ Đà Nẵng</span>
-        <h1>Nói nhu cầu, đội tư vấn sẽ lọc căn phù hợp.</h1>
-        <p>
-          Form này gửi thẳng về khu quản trị để admin theo dõi, gọi điện, gửi email và chuyển trạng thái chăm sóc khách hàng.
-        </p>
+        <span>{t('contact.badge')}</span>
+        <h1>{t('contact.title')}</h1>
+        <p>{t('contact.description')}</p>
         <ContactInfoGrid>
           <div>
             <strong><PhoneOutlined /> Hotline</strong>
-            <p>0900 000 000 - hỗ trợ tư vấn khu vực Hải Châu, Sơn Trà, Ngũ Hành Sơn.</p>
+            <p>{t('contact.hotlineText')}</p>
           </div>
           <div>
             <strong><MailOutlined /> Email</strong>
             <p>support@dnapartmenthub.vn</p>
           </div>
           <div>
-            <strong><CustomerServiceOutlined /> Gợi ý nhanh</strong>
-            <p><Link to="/apartments">Xem danh mục căn hộ</Link> hoặc <Link to="/favorites">mở căn hộ ưa thích</Link> trước khi gửi nhu cầu.</p>
+            <strong><CustomerServiceOutlined /> {t('contact.quickTitle')}</strong>
+            <p>{t('contact.quickText')}</p>
           </div>
         </ContactInfoGrid>
       </ContactHero>
 
       <ContactCard>
-        <h2>Gửi yêu cầu liên hệ</h2>
+        <h2>{t('contact.formTitle')}</h2>
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Form.Item name="name" label="Họ tên" rules={[{ required: true, min: 2 }]}>
-            <Input prefix={<UserOutlined />} placeholder="Nguyễn Văn A" />
+          <Form.Item name="name" label={t('auth.name')} rules={[{ required: true, min: 2 }]}>
+            <Input prefix={<UserOutlined />} placeholder={t('auth.placeholderName')} />
           </Form.Item>
           <Form.Item name="email" label="Email" rules={[{ required: true, type: 'email' }]}>
             <Input prefix={<MailOutlined />} placeholder="you@gmail.com" />
           </Form.Item>
-          <Form.Item name="phone" label="Số điện thoại" rules={[{ required: true, min: 8 }]}>
+          <Form.Item name="phone" label={t('auth.phone')} rules={[{ required: true, min: 8 }]}>
             <Input prefix={<PhoneOutlined />} placeholder="0900000000" />
           </Form.Item>
-          <Form.Item name="district" label="Khu vực quan tâm">
+          <Form.Item name="district" label={t('contact.area')}>
             <Select
               allowClear
-              placeholder="Chọn quận"
+              placeholder={t('filters.district')}
               options={daNangLocations.map((item) => ({ label: item.label, value: item.label }))}
             />
           </Form.Item>
-          <Form.Item name="budget" label="Ngân sách dự kiến">
-            <Input placeholder="Ví dụ: 2.5 - 4 tỷ hoặc 18 triệu/tháng" />
+          <Form.Item name="budget" label={t('contact.budget')}>
+            <Input placeholder={t('contact.budgetPlaceholder')} />
           </Form.Item>
-          <Form.Item name="message" label="Nhu cầu chi tiết" rules={[{ required: true, min: 10 }]}>
-            <Input.TextArea rows={5} placeholder="Bạn cần mấy phòng ngủ, gần khu nào, mua hay thuê, thời gian dọn vào..." />
+          <Form.Item name="message" label={t('contact.detail')} rules={[{ required: true, min: 10 }]}>
+            <Input.TextArea rows={5} placeholder={t('contact.detailPlaceholder')} />
           </Form.Item>
           <Button type="primary" htmlType="submit" block>
-            Gửi cho admin tư vấn
+            {t('contact.submit')}
           </Button>
         </Form>
       </ContactCard>

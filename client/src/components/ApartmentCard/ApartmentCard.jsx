@@ -2,10 +2,12 @@ import { Badge, Button, Card, Space, Tag } from 'antd';
 import { EnvironmentOutlined, HeartFilled, HeartOutlined, HomeOutlined, PictureOutlined } from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { usePreferences } from '../../context/AppPreferences.jsx';
 import { AvailabilityBar, CardBody, Image, MetaGrid, TitleRow } from './styles.js';
 
 export function ApartmentCard({ apartment, index = 0, favorited = false, onFavorite, onInterest }) {
   const navigate = useNavigate();
+  const { t } = usePreferences();
   const soldOut = (apartment.availableUnits ?? 1) <= 0;
   const openDetail = () => {
     navigate(`/apartments/${apartment.id}`);
@@ -22,17 +24,17 @@ export function ApartmentCard({ apartment, index = 0, favorited = false, onFavor
             <button type="button" onClick={openDetail}>{apartment.title}</button>
             <p><EnvironmentOutlined /> {apartment.address}</p>
           </div>
-          <strong>{soldOut ? 'Đã hết' : apartment.priceLabel}</strong>
+          <strong>{soldOut ? t('common.soldOut') : apartment.priceLabel}</strong>
         </TitleRow>
         <MetaGrid>
           <span><HomeOutlined /> {apartment.area} m2</span>
-          <span>{apartment.bedrooms} PN</span>
-          <span>{apartment.bathrooms} WC</span>
+          <span>{apartment.bedrooms} {t('common.bedroomsShort')}</span>
+          <span>{apartment.bathrooms} {t('common.bathroomsShort')}</span>
           <span>{apartment.rentLabel}</span>
         </MetaGrid>
         <AvailabilityBar $soldOut={soldOut}>
-          <div>{soldOut ? 'Đã hết số lượng' : `Còn ${apartment.availableUnits ?? 1} căn có thể tư vấn`}</div>
-          <span>{soldOut ? 'Admin đã khóa đăng ký quan tâm' : 'Cập nhật theo tồn kho admin'}</span>
+          <div>{soldOut ? t('common.soldOutUnits') : t('common.available', { count: apartment.availableUnits ?? 1 })}</div>
+          <span>{soldOut ? t('common.adminLocked') : t('common.inventoryUpdated')}</span>
         </AvailabilityBar>
         <Space size={[8, 8]} wrap>
           {apartment.tags.map((tag) => (
@@ -41,7 +43,7 @@ export function ApartmentCard({ apartment, index = 0, favorited = false, onFavor
         </Space>
         <Space direction="vertical" style={{ width: '100%' }}>
           <Button type="primary" block icon={<PictureOutlined />} onClick={openDetail}>
-            Xem chi tiết
+            {t('common.viewDetail')}
           </Button>
           <Space.Compact block>
             <Button
@@ -49,10 +51,10 @@ export function ApartmentCard({ apartment, index = 0, favorited = false, onFavor
               icon={favorited ? <HeartFilled /> : <HeartOutlined />}
               onClick={() => onFavorite?.(apartment)}
             >
-              Yêu thích
+              {t('common.favorite')}
             </Button>
             <Button block disabled={soldOut} onClick={() => onInterest?.(apartment)}>
-              {soldOut ? 'Đã hết' : 'Tôi thích căn này'}
+              {soldOut ? t('common.soldOut') : t('common.likeThisApartment')}
             </Button>
           </Space.Compact>
         </Space>
@@ -68,9 +70,9 @@ export function ApartmentCard({ apartment, index = 0, favorited = false, onFavor
       transition={{ duration: 0.45, delay: Math.min(index * 0.04, 0.2) }}
     >
       {soldOut ? (
-        <Badge.Ribbon text="Đã hết" color="red">{content}</Badge.Ribbon>
+        <Badge.Ribbon text={t('common.soldOut')} color="red">{content}</Badge.Ribbon>
       ) : apartment.featured ? (
-        <Badge.Ribbon text="Nổi bật" color="green">{content}</Badge.Ribbon>
+        <Badge.Ribbon text={t('common.featured')} color="green">{content}</Badge.Ribbon>
       ) : content}
     </motion.article>
   );

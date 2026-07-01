@@ -16,11 +16,11 @@ export const ContactPageWrap = styled.main`
 
 export const ContactHero = styled.section`
   padding: 34px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--border-soft);
   border-radius: 32px;
   background:
     radial-gradient(circle at top right, rgba(32, 208, 163, 0.18), transparent 32%),
-    rgba(255, 255, 255, 0.08);
+    var(--surface);
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.24);
 
   span {
@@ -33,14 +33,14 @@ export const ContactHero = styled.section`
 
   h1 {
     margin: 10px 0 16px;
-    color: #ffffff;
+    color: var(--text-heading);
     font-size: clamp(40px, 7vw, 74px);
     line-height: 0.98;
     letter-spacing: -0.07em;
   }
 
   p {
-    color: rgba(231, 238, 251, 0.72);
+    color: var(--text-muted);
     font-size: 17px;
     line-height: 1.75;
   }
@@ -48,13 +48,13 @@ export const ContactHero = styled.section`
 
 export const ContactCard = styled.section`
   padding: 28px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--border-soft);
   border-radius: 28px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface);
 
   h2 {
     margin: 0 0 18px;
-    color: #ffffff;
+    color: var(--text-heading);
   }
 
   .ant-form-item-label > label {
@@ -77,7 +77,7 @@ export const ContactInfoGrid = styled.div`
 
   strong {
     display: block;
-    color: #ffffff;
+    color: var(--text-heading);
     margin-bottom: 4px;
   }
 

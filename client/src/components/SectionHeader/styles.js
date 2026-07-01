@@ -5,7 +5,7 @@ export const Wrap = styled.div`
 
   p {
     margin: 10px 0 0;
-    color: rgba(231, 238, 251, 0.68);
+    color: var(--text-muted);
     font-size: 16px;
     line-height: 1.7;
   }
@@ -27,7 +27,7 @@ export const Badge = styled.span`
 
 export const Title = styled.h2`
   margin: 0;
-  color: #ffffff;
+  color: var(--text-heading);
   font-size: clamp(30px, 4vw, 54px);
   line-height: 1.04;
   letter-spacing: -0.05em;

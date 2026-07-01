@@ -16,9 +16,9 @@ export const AccountPageWrap = styled.main`
 
 export const AccountPanel = styled.section`
   padding: 28px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--border-soft);
   border-radius: 30px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface);
   box-shadow: 0 22px 70px rgba(0, 0, 0, 0.2);
 
   span {
@@ -32,7 +32,7 @@ export const AccountPanel = styled.section`
   h1,
   h2 {
     margin: 8px 0 16px;
-    color: #ffffff;
+    color: var(--text-heading);
   }
 
   h1 {
@@ -41,7 +41,7 @@ export const AccountPanel = styled.section`
   }
 
   p {
-    color: rgba(231, 238, 251, 0.68);
+    color: var(--text-muted);
     line-height: 1.7;
   }
 
@@ -84,10 +84,10 @@ export const SecurityItem = styled.div`
 
   strong {
     display: block;
-    color: #ffffff;
+    color: var(--text-heading);
   }
 
   small {
-    color: rgba(231, 238, 251, 0.58);
+    color: var(--text-soft);
   }
 `;

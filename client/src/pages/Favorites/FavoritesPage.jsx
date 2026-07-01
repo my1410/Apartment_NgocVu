@@ -5,10 +5,12 @@ import { Link, useNavigate } from 'react-router-dom';
 import { ApartmentCard } from '../../components/ApartmentCard/ApartmentCard.jsx';
 import { SectionHeader } from '../../components/SectionHeader/SectionHeader.jsx';
 import { createInterest, getFavorites, toggleFavorite } from '../../services/apiClient.js';
+import { usePreferences } from '../../context/AppPreferences.jsx';
 import { ApartmentGrid, HomeWrap, Section } from '../Home/styles.js';
 
 export function FavoritesPage() {
   const { message } = AntdApp.useApp();
+  const { t } = usePreferences();
   const navigate = useNavigate();
   const [apartments, setApartments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -19,12 +21,12 @@ export function FavoritesPage() {
       const items = await getFavorites();
       setApartments(items);
     } catch {
-      message.warning('Bạn cần đăng nhập để xem căn hộ ưa thích.');
+      message.warning(t('favorites.needLogin'));
       navigate('/login', { replace: true });
     } finally {
       setLoading(false);
     }
-  }, [message, navigate]);
+  }, [message, navigate, t]);
 
   useEffect(() => {
     loadFavorites();
@@ -32,31 +34,31 @@ export function FavoritesPage() {
 
   const handleFavorite = async (apartment) => {
     await toggleFavorite(apartment.id);
-    message.success('Đã bỏ khỏi danh sách ưa thích.');
+    message.success(t('favorites.removed'));
     loadFavorites();
   };
 
   const handleInterest = async (apartment) => {
     await createInterest(apartment.id, 'Khách hàng gửi nhu cầu từ trang căn hộ ưa thích.');
-    message.success('Admin đã nhận được nhu cầu của bạn.');
+    message.success(t('favorites.interestSent'));
   };
 
   return (
     <HomeWrap>
       <Section>
         <SectionHeader
-          eyebrow="Căn hộ ưa thích"
-          title="Quản lý căn hộ ưa thích của tôi"
-          description="Theo dõi căn đã lưu, gửi tín hiệu quan tâm cho admin và cập nhật hồ sơ để tư vấn viên liên hệ đúng thông tin."
+          eyebrow={t('favorites.eyebrow')}
+          title={t('favorites.title')}
+          description={t('favorites.description')}
         />
         <Card>
           <Space size={18} wrap>
-            <Statistic title="Căn đã lưu" value={apartments.length} prefix={<HeartOutlined />} />
+            <Statistic title={t('favorites.saved')} value={apartments.length} prefix={<HeartOutlined />} />
             <Button icon={<UserOutlined />}>
-              <Link to="/account">Quản lý tài khoản</Link>
+              <Link to="/account">{t('account.manage')}</Link>
             </Button>
             <Button type="primary" icon={<CustomerServiceOutlined />}>
-              <Link to="/contact">Gửi yêu cầu tư vấn</Link>
+              <Link to="/contact">{t('common.sendConsultation')}</Link>
             </Button>
           </Space>
         </Card>
@@ -77,10 +79,10 @@ export function FavoritesPage() {
           </ApartmentGrid>
         ) : (
           <Empty
-            description="Bạn chưa lưu căn hộ nào"
+            description={t('favorites.empty')}
           >
             <Button type="primary">
-              <Link to="/apartments">Xem danh mục căn hộ</Link>
+              <Link to="/apartments">{t('common.viewApartments')}</Link>
             </Button>
           </Empty>
         )}

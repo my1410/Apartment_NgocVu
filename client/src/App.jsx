@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter, Route, Routes } from 'react-router-dom';
 import { AppLayout } from './components/Layout/AppLayout.jsx';
+import { usePreferences } from './context/AppPreferences.jsx';
 import { HomePage } from './pages/Home/HomePage.jsx';
 import { LoginPage } from './pages/Auth/LoginPage.jsx';
 
@@ -26,10 +27,11 @@ const routerBasename = import.meta.env.BASE_URL === '/'
   : import.meta.env.BASE_URL.replace(/\/$/, '');
 
 export default function App() {
+  const { t } = usePreferences();
   return (
     <BrowserRouter basename={routerBasename} future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
       <AppLayout>
-        <Suspense fallback={<div style={{ padding: 40 }}>Đang tải...</div>}>
+        <Suspense fallback={<div style={{ padding: 40 }}>{t('common.loading')}</div>}>
           <Routes>
             <Route path="/" element={<HomePage />} />
             <Route path="/apartments" element={<ApartmentsPage />} />

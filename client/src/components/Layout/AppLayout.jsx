@@ -1,11 +1,13 @@
 import { useEffect, useState } from 'react';
-import { Button, Drawer } from 'antd';
+import { Button, Drawer, Select } from 'antd';
 import {
   ContactsOutlined,
   HeartOutlined,
   HomeOutlined,
   LoginOutlined,
   MenuOutlined,
+  MoonOutlined,
+  SunOutlined,
   UserOutlined,
   UserAddOutlined,
   UnorderedListOutlined
@@ -13,19 +15,31 @@ import {
 import { Link, NavLink, useLocation } from 'react-router-dom';
 import { AiChatbot } from '../AiChatbot/AiChatbot.jsx';
 import { getApartments } from '../../services/apiClient.js';
-import { Header, HeaderInner, Logo, MobileDrawerContent, MobileMenuButton, Nav, PageShell } from './styles.js';
+import { usePreferences } from '../../context/AppPreferences.jsx';
+import {
+  Header,
+  HeaderInner,
+  Logo,
+  MobileDrawerContent,
+  MobileMenuButton,
+  MobilePreferenceControls,
+  Nav,
+  PageShell,
+  PreferenceControls
+} from './styles.js';
 
 const navItems = [
-  { to: '/', label: 'Trang chủ', icon: <HomeOutlined /> },
-  { to: '/apartments', label: 'Danh mục căn hộ', icon: <UnorderedListOutlined /> },
-  { to: '/favorites', label: 'Căn hộ ưa thích', icon: <HeartOutlined /> },
-  { to: '/contact', label: 'Liên hệ', icon: <ContactsOutlined /> },
-  { to: '/account', label: 'Tài khoản', icon: <UserOutlined /> }
+  { to: '/', labelKey: 'nav.home', icon: <HomeOutlined /> },
+  { to: '/apartments', labelKey: 'nav.apartments', icon: <UnorderedListOutlined /> },
+  { to: '/favorites', labelKey: 'nav.favorites', icon: <HeartOutlined /> },
+  { to: '/contact', labelKey: 'nav.contact', icon: <ContactsOutlined /> },
+  { to: '/account', labelKey: 'nav.account', icon: <UserOutlined /> }
 ];
 
 export function AppLayout({ children }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const [chatApartments, setChatApartments] = useState([]);
+  const { language, setLanguage, themeMode, toggleTheme, t } = usePreferences();
   const location = useLocation();
 
   useEffect(() => {
@@ -37,6 +51,26 @@ export function AppLayout({ children }) {
       .then(setChatApartments)
       .catch(() => setChatApartments([]));
   }, []);
+
+  const renderPreferenceControls = () => (
+    <>
+      <Button
+        icon={themeMode === 'dark' ? <SunOutlined /> : <MoonOutlined />}
+        onClick={toggleTheme}
+      >
+        {themeMode === 'dark' ? t('prefs.theme.light') : t('prefs.theme.dark')}
+      </Button>
+      <Select
+        aria-label={t('prefs.language')}
+        value={language}
+        onChange={setLanguage}
+        options={[
+          { value: 'vi', label: 'VI' },
+          { value: 'en', label: 'EN' }
+        ]}
+      />
+    </>
+  );
 
   return (
     <PageShell>
@@ -51,23 +85,24 @@ export function AppLayout({ children }) {
           <Nav>
             {navItems.map((item) => (
               <NavLink key={item.to} to={item.to} end={item.to === '/'}>
-                {item.icon} {item.label}
+                {item.icon} {t(item.labelKey)}
               </NavLink>
             ))}
+            <PreferenceControls>{renderPreferenceControls()}</PreferenceControls>
             <Button type="primary" icon={<LoginOutlined />}>
-              <Link to="/login">Đăng nhập</Link>
+              <Link to="/login">{t('common.login')}</Link>
             </Button>
             <Button icon={<UserAddOutlined />}>
-              <Link to="/register">Đăng ký</Link>
+              <Link to="/register">{t('common.register')}</Link>
             </Button>
           </Nav>
           <MobileMenuButton icon={<MenuOutlined />} onClick={() => setMenuOpen(true)}>
-            Menu
+            {t('nav.menu')}
           </MobileMenuButton>
         </HeaderInner>
       </Header>
       <Drawer
-        title="Điều hướng"
+        title={t('nav.drawerTitle')}
         placement="right"
         open={menuOpen}
         onClose={() => setMenuOpen(false)}
@@ -76,14 +111,15 @@ export function AppLayout({ children }) {
         <MobileDrawerContent>
           {navItems.map((item) => (
             <NavLink key={item.to} to={item.to} end={item.to === '/'}>
-              {item.icon} {item.label}
+              {item.icon} {t(item.labelKey)}
             </NavLink>
           ))}
+          <MobilePreferenceControls>{renderPreferenceControls()}</MobilePreferenceControls>
           <Button type="primary" size="large" icon={<LoginOutlined />} block>
-            <Link to="/login">Đăng nhập</Link>
+            <Link to="/login">{t('common.login')}</Link>
           </Button>
           <Button size="large" icon={<UserAddOutlined />} block>
-            <Link to="/register">Đăng ký</Link>
+            <Link to="/register">{t('common.register')}</Link>
           </Button>
         </MobileDrawerContent>
       </Drawer>

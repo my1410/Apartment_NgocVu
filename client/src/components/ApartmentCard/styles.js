@@ -11,9 +11,9 @@ export const CardBody = styled.div`
   gap: 18px;
 
   .ant-tag {
-    border-color: rgba(255, 255, 255, 0.12);
+    border-color: var(--border-soft);
     color: rgba(231, 238, 251, 0.82);
-    background: rgba(255, 255, 255, 0.08);
+    background: var(--surface);
   }
 `;
 
@@ -26,7 +26,7 @@ export const TitleRow = styled.div`
     margin: 0;
     padding: 0;
     border: 0;
-    color: #ffffff;
+    color: var(--text-heading);
     background: transparent;
     font-size: 20px;
     font-weight: 800;
@@ -44,7 +44,7 @@ export const TitleRow = styled.div`
     display: flex;
     align-items: center;
     gap: 6px;
-    color: rgba(231, 238, 251, 0.62);
+    color: var(--text-soft);
     line-height: 1.45;
   }
 
@@ -93,7 +93,7 @@ export const AvailabilityBar = styled.div`
   font-weight: 900;
 
   span {
-    color: rgba(231, 238, 251, 0.62);
+    color: var(--text-soft);
     font-size: 13px;
     font-weight: 800;
   }

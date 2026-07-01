@@ -2,30 +2,32 @@ import { useEffect, useState } from 'react';
 import { Button, Result } from 'antd';
 import { Link, useSearchParams } from 'react-router-dom';
 import { verifyEmail } from '../../services/apiClient.js';
+import { usePreferences } from '../../context/AppPreferences.jsx';
 
 export function VerifyEmailPage() {
   const [searchParams] = useSearchParams();
+  const { t } = usePreferences();
   const [status, setStatus] = useState('info');
-  const [message, setMessage] = useState('Đang xác nhận email...');
+  const [message, setMessage] = useState(() => t('auth.verifyChecking'));
 
   useEffect(() => {
     const token = searchParams.get('token');
     if (!token) {
       setStatus('warning');
-      setMessage('Thiếu token xác nhận email.');
+      setMessage(t('auth.verifyMissing'));
       return;
     }
 
     verifyEmail(token)
       .then(() => {
         setStatus('success');
-        setMessage('Email đã được xác nhận thành công.');
+        setMessage(t('auth.verifySuccess'));
       })
       .catch((error) => {
         setStatus('error');
-        setMessage(error.response?.data?.message || 'Không thể xác nhận email.');
+        setMessage(error.response?.data?.message || t('auth.verifyError'));
       });
-  }, [searchParams]);
+  }, [searchParams, t]);
 
   return (
     <Result
@@ -33,7 +35,7 @@ export function VerifyEmailPage() {
       title={message}
       extra={(
         <Button type="primary">
-          <Link to="/apartments">Về danh mục căn hộ</Link>
+          <Link to="/apartments">{t('common.backToApartments')}</Link>
         </Button>
       )}
     />

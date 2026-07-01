@@ -21,6 +21,7 @@ import {
   toggleFavorite
 } from '../../services/apiClient.js';
 import { resolveAddressLocation, scoreApartmentByAddress } from '../../utils/locationMatch.js';
+import { usePreferences } from '../../context/AppPreferences.jsx';
 import {
   ApartmentGrid,
   ContactCard,
@@ -47,34 +48,35 @@ const reveal = {
 const MotionLink = motion.create(Link);
 
 const heroStats = [
-  { icon: <HomeOutlined />, label: 'Căn hộ chọn lọc', value: '128+' },
-  { icon: <BarChartOutlined />, label: 'Khu vực hỗ trợ', value: '42' },
-  { icon: <SafetyCertificateOutlined />, label: 'Tin xác thực', value: '96%' }
+  { icon: <HomeOutlined />, labelKey: 'home.metric.apartments', value: '128+' },
+  { icon: <BarChartOutlined />, labelKey: 'home.metric.areas', value: '42' },
+  { icon: <SafetyCertificateOutlined />, labelKey: 'home.metric.verified', value: '96%' }
 ];
 
 const features = [
   {
     to: '/apartments',
     icon: <EnvironmentOutlined />,
-    title: 'Lọc theo khu vực',
-    description: 'Chọn quận, phường, giá, diện tích và trạng thái còn hàng trong một màn hình gọn.'
+    titleKey: 'home.feature.locationTitle',
+    descriptionKey: 'home.feature.locationDescription'
   },
   {
     to: '/favorites',
     icon: <HeartOutlined />,
-    title: 'Căn hộ ưa thích',
-    description: 'Lưu căn phù hợp, gửi tín hiệu cho admin và nhận tư vấn theo nhu cầu thật.'
+    titleKey: 'home.feature.favoriteTitle',
+    descriptionKey: 'home.feature.favoriteDescription'
   },
   {
     to: '/account#security',
     icon: <SafetyCertificateOutlined />,
-    title: 'Bảo mật tài khoản',
-    description: 'Email xác thực, cookie HTTP-only và trung tâm đổi mật khẩu cho khách hàng.'
+    titleKey: 'home.feature.securityTitle',
+    descriptionKey: 'home.feature.securityDescription'
   }
 ];
 
 export function HomePage() {
   const { message } = AntdApp.useApp();
+  const { t } = usePreferences();
   const [apartments, setApartments] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState([]);
   const [user, setUser] = useState(null);
@@ -109,21 +111,21 @@ export function HomePage() {
 
   const handleFavorite = async (apartment) => {
     if (!user) {
-      message.warning('Bạn cần đăng nhập để lưu căn hộ ưa thích.');
+      message.warning(t('apartments.loginToFavorite'));
       return;
     }
     const result = await toggleFavorite(apartment.id);
     setFavoriteIds(result.favoriteIds);
-    message.success(result.favorited ? 'Đã thêm vào căn hộ ưa thích.' : 'Đã bỏ khỏi danh sách ưa thích.');
+    message.success(result.favorited ? t('apartments.favoriteAdded') : t('apartments.favoriteRemoved'));
   };
 
   const handleInterest = async (apartment) => {
     if (!user) {
-      message.warning('Bạn cần đăng nhập để gửi nhu cầu cho admin.');
+      message.warning(t('apartments.loginToInterest'));
       return;
     }
     await createInterest(apartment.id, 'Khách hàng quan tâm căn hộ gần địa chỉ đăng ký.');
-    message.success('Admin đã nhận được nhu cầu của bạn và sẽ liên hệ lại.');
+    message.success(t('apartments.interestSent'));
   };
 
   return (
@@ -135,26 +137,23 @@ export function HomePage() {
         transition={{ duration: 0.65, ease: 'easeOut' }}
       >
         <HeroCopy>
-          <span>DN Apartment Hub</span>
-          <h1>Tìm căn hộ Đà Nẵng nhanh, đẹp và đúng khu vực.</h1>
-          <p>
-            Nền tảng gợi ý căn hộ theo vị trí, ngân sách, bản đồ, tồn kho và nhu cầu thực tế.
-            Trải nghiệm được tối ưu để khách hàng xem nhanh, lưu nhanh và gửi nhu cầu cho admin ngay.
-          </p>
+          <span>{t('home.badge')}</span>
+          <h1>{t('home.title')}</h1>
+          <p>{t('home.description')}</p>
           <HeroActions>
             <Button type="primary" size="large" icon={<ArrowRightOutlined />}>
-              <Link to="/apartments">Xem danh mục căn hộ</Link>
+              <Link to="/apartments">{t('common.viewApartments')}</Link>
             </Button>
             <Button size="large">
-              <Link to="/contact">Liên hệ tư vấn</Link>
+              <Link to="/contact">{t('common.contact')}</Link>
             </Button>
           </HeroActions>
           <HeroMetrics>
             {heroStats.map((item) => (
-              <HeroMetric key={item.label}>
+              <HeroMetric key={item.labelKey}>
                 {item.icon}
                 <strong>{item.value}</strong>
-                <span>{item.label}</span>
+                <span>{t(item.labelKey)}</span>
               </HeroMetric>
             ))}
           </HeroMetrics>
@@ -167,11 +166,11 @@ export function HomePage() {
             animate={{ opacity: 1, y: 0, rotate: 0 }}
             transition={{ duration: 0.75, delay: 0.18, ease: 'easeOut' }}
           >
-            <span>AI gợi ý hôm nay</span>
-            <h2>Hải Châu ven sông</h2>
-            <p>2 phòng ngủ • 78m2 • view sông Hàn • còn 1 căn tư vấn</p>
+            <span>{t('home.aiToday')}</span>
+            <h2>{t('home.riverTitle')}</h2>
+            <p>{t('home.riverMeta')}</p>
             <div>
-              <small>Độ phù hợp</small>
+              <small>{t('home.matchScore')}</small>
               <strong>96%</strong>
             </div>
           </VisualCard>
@@ -181,9 +180,9 @@ export function HomePage() {
             animate={{ opacity: 1, y: 0, rotate: 0 }}
             transition={{ duration: 0.75, delay: 0.32, ease: 'easeOut' }}
           >
-            <span>Bản đồ & tồn kho</span>
-            <h2>2 vị trí gần bạn</h2>
-            <p>Lọc theo địa chỉ đăng ký và trạng thái còn hàng.</p>
+            <span>{t('home.mapStock')}</span>
+            <h2>{t('home.nearbyCount')}</h2>
+            <p>{t('home.nearbyMeta')}</p>
           </VisualCard>
         </HeroPreview>
       </HomeHero>
@@ -197,33 +196,33 @@ export function HomePage() {
         transition={{ duration: 0.55 }}
       >
         <SectionHeader
-          eyebrow="Căn hộ gần bạn"
-          title="Gợi ý theo địa chỉ đăng ký của tài khoản"
-          description="Hệ thống đọc quận/phường từ địa chỉ bạn đã đăng ký, sau đó ưu tiên căn hộ cùng khu vực và còn số lượng tư vấn."
+          eyebrow={t('home.nearbyEyebrow')}
+          title={t('home.nearbyTitle')}
+          description={t('home.nearbyDescription')}
         />
         <NearbyPanel>
           <div>
             <strong>
               {userLocation.districtLabel
-                ? `Khu vực của bạn: ${userLocation.ward ? `${userLocation.ward}, ` : ''}${userLocation.districtLabel}`
-                : 'Chưa xác định được khu vực của bạn'}
+                ? t('home.nearbyArea', { area: `${userLocation.ward ? `${userLocation.ward}, ` : ''}${userLocation.districtLabel}` })
+                : t('home.nearbyUnknown')}
             </strong>
             <p>
               {user
                 ? userLocation.districtLabel
-                  ? `Dựa trên địa chỉ: ${userLocation.fullAddress || 'thông tin tài khoản của bạn'}.`
-                  : 'Bạn hãy cập nhật quận/huyện trong tài khoản để hệ thống gợi ý chính xác hơn.'
-                : 'Đăng nhập hoặc đăng ký tài khoản có địa chỉ để nhận gợi ý căn hộ gần nơi bạn ở.'}
+                  ? t('home.nearbyAddress', { address: userLocation.fullAddress || t('nav.account') })
+                  : t('home.nearbyUpdate')
+                : t('home.nearbyGuest')}
             </p>
           </div>
           <Space wrap>
-            {!user && <Button type="primary"><Link to="/login">Đăng nhập</Link></Button>}
+            {!user && <Button type="primary"><Link to="/login">{t('common.login')}</Link></Button>}
             <Button>
-              <Link to={user ? '/account' : '/register'}>{user ? 'Cập nhật địa chỉ' : 'Đăng ký tài khoản'}</Link>
+              <Link to={user ? '/account' : '/register'}>{user ? t('common.updateAddress') : t('common.registerAccount')}</Link>
             </Button>
             {userLocation.district && (
               <Button type="primary">
-                <Link to={nearbyLink}>Xem tất cả gần tôi</Link>
+                <Link to={nearbyLink}>{t('home.viewNearMe')}</Link>
               </Button>
             )}
           </Space>
@@ -245,7 +244,7 @@ export function HomePage() {
             ))}
           </ApartmentGrid>
         ) : (
-          <Empty description={user ? 'Chưa có căn hộ trùng khu vực địa chỉ của bạn' : 'Đăng nhập để xem căn hộ gần bạn'} />
+          <Empty description={user ? t('home.emptyNearbyUser') : t('home.emptyNearbyGuest')} />
         )}
       </Section>
 
@@ -258,14 +257,14 @@ export function HomePage() {
         transition={{ duration: 0.55 }}
       >
         <SectionHeader
-          eyebrow="Tính năng nổi bật"
-          title="Đủ chức năng quan trọng, trình bày sạch và dễ dùng"
-          description="Trang chủ chỉ giữ những điểm cần ra quyết định. Các thao tác chi tiết được đưa về danh mục, tài khoản và liên hệ."
+          eyebrow={t('home.featuresEyebrow')}
+          title={t('home.featuresTitle')}
+          description={t('home.featuresDescription')}
         />
         <FeatureGrid>
           {features.map((feature, index) => (
             <FeatureCard
-              key={feature.title}
+              key={feature.titleKey}
               as={MotionLink}
               to={feature.to}
               initial={{ opacity: 0, y: 22 }}
@@ -274,8 +273,8 @@ export function HomePage() {
               transition={{ duration: 0.45, delay: index * 0.08 }}
             >
               {feature.icon}
-              <h3>{feature.title}</h3>
-              <p>{feature.description}</p>
+              <h3>{t(feature.titleKey)}</h3>
+              <p>{t(feature.descriptionKey)}</p>
             </FeatureCard>
           ))}
         </FeatureGrid>
@@ -292,16 +291,14 @@ export function HomePage() {
       >
         <ContactCard>
           <div>
-            <span>Liên hệ</span>
-            <h2>Cần tư vấn căn hộ phù hợp?</h2>
-            <p>
-              Lưu căn hộ bạn thích hoặc gửi yêu cầu, admin sẽ nhận được thông tin và liên hệ lại theo tài khoản của bạn.
-            </p>
+            <span>{t('common.contact')}</span>
+            <h2>{t('home.contactTitle')}</h2>
+            <p>{t('home.contactDescription')}</p>
           </div>
           <Space wrap>
             <p><CustomerServiceOutlined /> 0900 000 000</p>
             <Button type="primary">
-              <Link to="/contact">Gửi yêu cầu tư vấn</Link>
+              <Link to="/contact">{t('common.sendConsultation')}</Link>
             </Button>
           </Space>
         </ContactCard>

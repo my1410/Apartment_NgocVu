@@ -13,6 +13,7 @@ import {
   getFavorites,
   toggleFavorite
 } from '../../services/apiClient.js';
+import { usePreferences } from '../../context/AppPreferences.jsx';
 import { ApartmentGrid, ContentGrid, HomeWrap, Section, StickyMap } from '../Home/styles.js';
 import { AiPanel, PageHero } from './styles.js';
 
@@ -29,6 +30,7 @@ const defaultFilters = {
 
 export function ApartmentsPage() {
   const { message } = AntdApp.useApp();
+  const { t } = usePreferences();
   const [searchParams] = useSearchParams();
   const [apartments, setApartments] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState([]);
@@ -91,30 +93,30 @@ export function ApartmentsPage() {
 
   const handleFavorite = async (apartment) => {
     if (!user) {
-      message.warning('Bạn cần đăng nhập để lưu căn hộ ưa thích.');
+      message.warning(t('apartments.loginToFavorite'));
       return;
     }
     const result = await toggleFavorite(apartment.id);
     setFavoriteIds(result.favoriteIds);
-    message.success(result.favorited ? 'Đã thêm vào căn hộ ưa thích.' : 'Đã bỏ khỏi danh sách ưa thích.');
+    message.success(result.favorited ? t('apartments.favoriteAdded') : t('apartments.favoriteRemoved'));
   };
 
   const handleInterest = async (apartment) => {
     if (!user) {
-      message.warning('Bạn cần đăng nhập để gửi nhu cầu cho admin.');
+      message.warning(t('apartments.loginToInterest'));
       return;
     }
     await createInterest(apartment.id, 'Khách hàng quan tâm căn hộ này từ danh mục.');
-    message.success('Admin đã nhận được nhu cầu của bạn và sẽ liên hệ lại.');
+    message.success(t('apartments.interestSent'));
   };
 
   return (
     <HomeWrap>
       <PageHero>
         <SectionHeader
-          eyebrow="Danh mục căn hộ"
-          title="Tìm căn hộ theo vị trí, ngân sách và trạng thái còn hàng"
-          description="Bộ lọc được tách riêng khỏi trang chủ để khách hàng tập trung tìm kiếm, lưu căn hộ ưa thích và gửi nhu cầu cho admin."
+          eyebrow={t('apartments.eyebrow')}
+          title={t('apartments.title')}
+          description={t('apartments.description')}
         />
       </PageHero>
 
@@ -129,14 +131,18 @@ export function ApartmentsPage() {
           <AiPanel>
             <BulbOutlined />
             <div>
-              <strong>AI gợi ý phù hợp nhất lúc này</strong>
+              <strong>{t('apartments.aiTitle')}</strong>
               <p>
-                {recommendation.title} tại {recommendation.districtLabel}, giá {recommendation.priceLabel},
-                diện tích {recommendation.area} m2. Căn này còn hàng và khớp tốt với bộ lọc hiện tại.
+                {t('apartments.aiDescription', {
+                  title: recommendation.title,
+                  district: recommendation.districtLabel,
+                  price: recommendation.priceLabel,
+                  area: recommendation.area
+                })}
               </p>
             </div>
             <Button type="primary" onClick={() => handleInterest(recommendation)}>
-              Tôi thích căn này
+              {t('common.likeThisApartment')}
             </Button>
           </AiPanel>
         )}
@@ -159,7 +165,7 @@ export function ApartmentsPage() {
                 ))}
               </ApartmentGrid>
             ) : (
-              <Empty description="Chưa có căn hộ phù hợp với bộ lọc này" />
+              <Empty description={t('apartments.empty')} />
             )}
           </div>
           <StickyMap>

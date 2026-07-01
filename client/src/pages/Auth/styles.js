@@ -10,9 +10,9 @@ export const LoginPageWrap = styled.main`
 export const LoginCard = styled.section`
   width: min(460px, 100%);
   padding: 32px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--border-soft);
   border-radius: 32px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface);
   box-shadow: 0 22px 80px rgba(0, 0, 0, 0.24);
 
   span {
@@ -25,14 +25,14 @@ export const LoginCard = styled.section`
 
   h1 {
     margin: 10px 0;
-    color: #ffffff;
+    color: var(--text-heading);
     font-size: 36px;
     letter-spacing: -0.05em;
   }
 
   p {
     margin: 0 0 24px;
-    color: rgba(231, 238, 251, 0.68);
+    color: var(--text-muted);
     line-height: 1.7;
   }
 `;

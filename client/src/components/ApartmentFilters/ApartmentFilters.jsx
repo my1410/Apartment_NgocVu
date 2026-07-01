@@ -1,27 +1,38 @@
 import { Button, Checkbox, Col, InputNumber, Row, Select, Slider } from 'antd';
 import { ClearOutlined } from '@ant-design/icons';
 import { daNangLocations } from '../../data/vietnamLocations.js';
+import { usePreferences } from '../../context/AppPreferences.jsx';
 import { FilterCard, FilterTitle } from './styles.js';
 
-const priceMarks = {
-  1: '1 tỷ',
-  3: '3 tỷ',
-  5: '5 tỷ',
-  7: '7+ tỷ'
+const priceMarksByLanguage = {
+  vi: {
+    1: '1 tỷ',
+    3: '3 tỷ',
+    5: '5 tỷ',
+    7: '7+ tỷ'
+  },
+  en: {
+    1: '1B',
+    3: '3B',
+    5: '5B',
+    7: '7B+'
+  }
 };
 
 export function ApartmentFilters({ filters, onChange, onReset }) {
+  const { language, t } = usePreferences();
   const selectedDistrict = daNangLocations.find((district) => district.value === filters.district);
+  const priceMarks = priceMarksByLanguage[language] || priceMarksByLanguage.vi;
 
   return (
     <FilterCard>
       <FilterTitle>
         <div>
-          <span>Bộ lọc thông minh</span>
-          <h3>Lọc theo khu vực địa lý và nhu cầu</h3>
+          <span>{t('filters.badge')}</span>
+          <h3>{t('filters.title')}</h3>
         </div>
         <Button icon={<ClearOutlined />} onClick={onReset}>
-          Xóa lọc
+          {t('filters.reset')}
         </Button>
       </FilterTitle>
 
@@ -30,7 +41,7 @@ export function ApartmentFilters({ filters, onChange, onReset }) {
           <Select
             allowClear
             showSearch
-            placeholder="Quận"
+            placeholder={t('filters.district')}
             value={filters.district}
             onChange={(district) => onChange({ district, ward: undefined })}
             options={daNangLocations.map((district) => ({ label: district.label, value: district.value }))}
@@ -40,7 +51,7 @@ export function ApartmentFilters({ filters, onChange, onReset }) {
           <Select
             allowClear
             showSearch
-            placeholder="Phường"
+            placeholder={t('filters.ward')}
             value={filters.ward}
             disabled={!selectedDistrict}
             onChange={(ward) => onChange({ ward })}
@@ -50,31 +61,31 @@ export function ApartmentFilters({ filters, onChange, onReset }) {
         <Col xs={24} md={8}>
           <Select
             allowClear
-            placeholder="Trạng thái"
+            placeholder={t('filters.status')}
             value={filters.status}
             onChange={(status) => onChange({ status })}
             options={[
-              { label: 'Đang bán', value: 'Đang bán' },
-              { label: 'Cho thuê', value: 'Cho thuê' }
+              { label: t('filters.forSale'), value: 'Đang bán' },
+              { label: t('filters.forRent'), value: 'Cho thuê' }
             ]}
           />
         </Col>
         <Col xs={24} md={8}>
           <Select
-            placeholder="Sắp xếp"
+            placeholder={t('filters.sort')}
             value={filters.sort}
             onChange={(sort) => onChange({ sort })}
             options={[
-              { label: 'Nổi bật trước', value: 'featured' },
-              { label: 'Mới nhất', value: 'newest' },
-              { label: 'Giá thấp đến cao', value: 'price-asc' },
-              { label: 'Giá cao đến thấp', value: 'price-desc' },
-              { label: 'Diện tích lớn trước', value: 'area-desc' }
+              { label: t('filters.featured'), value: 'featured' },
+              { label: t('filters.newest'), value: 'newest' },
+              { label: t('filters.priceAsc'), value: 'price-asc' },
+              { label: t('filters.priceDesc'), value: 'price-desc' },
+              { label: t('filters.areaDesc'), value: 'area-desc' }
             ]}
           />
         </Col>
         <Col xs={24} md={16}>
-          <label>Mức giá: {filters.priceRange[0]} - {filters.priceRange[1]} tỷ</label>
+          <label>{t('filters.priceRange', { from: filters.priceRange[0], to: filters.priceRange[1] })}</label>
           <Slider
             range
             min={1}
@@ -86,17 +97,17 @@ export function ApartmentFilters({ filters, onChange, onReset }) {
           />
         </Col>
         <Col xs={24} md={4}>
-          <label>Số phòng ngủ</label>
+          <label>{t('filters.bedrooms')}</label>
           <InputNumber
             min={1}
             max={5}
             value={filters.bedrooms}
             onChange={(bedrooms) => onChange({ bedrooms })}
-            placeholder="Tối thiểu"
+            placeholder={t('filters.min')}
           />
         </Col>
         <Col xs={24} md={4}>
-          <label>Diện tích tối thiểu</label>
+          <label>{t('filters.minArea')}</label>
           <InputNumber
             min={30}
             max={250}
@@ -110,7 +121,7 @@ export function ApartmentFilters({ filters, onChange, onReset }) {
             checked={filters.onlyAvailable}
             onChange={(event) => onChange({ onlyAvailable: event.target.checked })}
           >
-            Chỉ hiện căn còn hàng
+            {t('filters.onlyAvailable')}
           </Checkbox>
         </Col>
       </Row>

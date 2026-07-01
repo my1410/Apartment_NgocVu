@@ -1,21 +1,21 @@
 import { Button, Input, List, Space } from 'antd';
 import { CloseOutlined, MessageOutlined, SendOutlined } from '@ant-design/icons';
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { askAssistant } from '../../services/apiClient.js';
+import { usePreferences } from '../../context/AppPreferences.jsx';
 import { Bubble, ChatButton, ChatPanel, Composer, Header, Messages, SuggestionBar } from './styles.js';
 
-const welcomeMessage = {
-  role: 'assistant',
-  content: 'Chào bạn, mình có thể gợi ý căn hộ theo quận, ngân sách, số phòng ngủ hoặc nhu cầu đầu tư/ở thật.'
-};
-
-const suggestions = [
-  'Gợi ý căn 2PN ở Hải Châu dưới 3 tỷ',
-  'Tôi muốn căn gần biển để cho thuê',
-  'Căn nào phù hợp gia đình trẻ?'
-];
-
 export function AiChatbot({ apartments = [] }) {
+  const { language, t } = usePreferences();
+  const welcomeMessage = useMemo(() => ({
+    role: 'assistant',
+    content: t('chat.welcome')
+  }), [t]);
+  const suggestions = useMemo(() => [
+    t('chat.suggest1'),
+    t('chat.suggest2'),
+    t('chat.suggest3')
+  ], [t]);
   const [open, setOpen] = useState(false);
   const [message, setMessage] = useState('');
   const [messages, setMessages] = useState([welcomeMessage]);
@@ -43,6 +43,10 @@ export function AiChatbot({ apartments = [] }) {
     }))
   }), [apartments]);
 
+  useEffect(() => {
+    setMessages([welcomeMessage]);
+  }, [language, welcomeMessage]);
+
   const sendMessage = async (overrideMessage) => {
     const trimmed = (overrideMessage ?? message).trim();
     if (!trimmed || sendingRef.current) return;
@@ -66,8 +70,8 @@ export function AiChatbot({ apartments = [] }) {
         <ChatPanel>
           <Header>
             <div>
-              <strong>AI tư vấn căn hộ</strong>
-              <span>Online 24/7</span>
+              <strong>{t('chat.title')}</strong>
+              <span>{t('chat.online')}</span>
             </div>
             <Button shape="circle" icon={<CloseOutlined />} onClick={() => setOpen(false)} />
           </Header>
@@ -82,7 +86,7 @@ export function AiChatbot({ apartments = [] }) {
           <Composer>
             <Input.TextArea
               autoSize={{ minRows: 1, maxRows: 3 }}
-              placeholder="Ví dụ: Tìm căn 2PN ở Hải Châu dưới 3 tỷ"
+              placeholder={t('chat.placeholder')}
               value={message}
               onChange={(event) => setMessage(event.target.value)}
               onPressEnter={(event) => {

@@ -48,7 +48,7 @@ export const HeroCopy = styled.div`
   h1 {
     max-width: 1050px;
     margin: 0;
-    color: #ffffff;
+    color: var(--text-heading);
     font-size: clamp(44px, 7vw, 92px);
     line-height: 0.96;
     letter-spacing: -0.075em;
@@ -57,7 +57,7 @@ export const HeroCopy = styled.div`
   p {
     max-width: 760px;
     margin: 26px 0 0;
-    color: rgba(231, 238, 251, 0.72);
+    color: var(--text-muted);
     font-size: clamp(16px, 2vw, 21px);
     line-height: 1.75;
   }
@@ -106,9 +106,9 @@ export const HeroMetrics = styled.div`
 
 export const HeroMetric = styled.div`
   padding: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.11);
+  border: 1px solid var(--surface-strong);
   border-radius: 22px;
-  background: rgba(255, 255, 255, 0.07);
+  background: var(--surface);
   backdrop-filter: blur(18px);
 
   .anticon {
@@ -119,13 +119,13 @@ export const HeroMetric = styled.div`
   strong {
     display: block;
     margin-top: 10px;
-    color: #ffffff;
+    color: var(--text-heading);
     font-size: 28px;
     letter-spacing: -0.04em;
   }
 
   span {
-    color: rgba(231, 238, 251, 0.62);
+    color: var(--text-soft);
     font-size: 13px;
     font-weight: 800;
   }
@@ -167,8 +167,8 @@ export const HeroOrbit = styled.div`
   background:
     radial-gradient(circle at 72% 18%, rgba(55, 169, 255, 0.28), transparent 24%),
     radial-gradient(circle at 18% 84%, rgba(32, 208, 163, 0.24), transparent 28%),
-    linear-gradient(145deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.035));
-  box-shadow: 0 34px 120px rgba(0, 0, 0, 0.26);
+    linear-gradient(145deg, var(--surface-strong), rgba(255, 255, 255, 0.035));
+  box-shadow: 0 34px 120px var(--shadow-soft);
 
   &::before,
   &::after {
@@ -208,12 +208,12 @@ export const VisualCard = styled(motion.div)`
   margin-left: ${({ $compact }) => ($compact ? 'auto' : '0')};
   margin-top: ${({ $compact }) => ($compact ? '-12px' : '0')};
   padding: ${({ $compact }) => ($compact ? '22px' : '30px')};
-  border: 1px solid rgba(255, 255, 255, 0.14);
+  border: 1px solid var(--border-soft);
   border-radius: ${({ $compact }) => ($compact ? '28px' : '36px')};
   background:
-    linear-gradient(145deg, rgba(255, 255, 255, 0.16), rgba(255, 255, 255, 0.07));
+    linear-gradient(145deg, rgba(255, 255, 255, 0.16), var(--surface));
   backdrop-filter: blur(22px);
-  box-shadow: 0 26px 80px rgba(0, 0, 0, 0.26);
+  box-shadow: 0 26px 80px var(--shadow-soft);
 
   span {
     color: #9df8dc;
@@ -225,7 +225,7 @@ export const VisualCard = styled(motion.div)`
 
   h2 {
     margin: 14px 0 10px;
-    color: #ffffff;
+    color: var(--text-heading);
     font-size: ${({ $compact }) => ($compact ? '28px' : '38px')};
     line-height: 1.02;
     letter-spacing: -0.06em;
@@ -233,7 +233,7 @@ export const VisualCard = styled(motion.div)`
 
   p {
     margin: 0;
-    color: rgba(231, 238, 251, 0.68);
+    color: var(--text-muted);
     line-height: 1.65;
   }
 
@@ -249,7 +249,7 @@ export const VisualCard = styled(motion.div)`
   }
 
   small {
-    color: rgba(231, 238, 251, 0.62);
+    color: var(--text-soft);
     font-weight: 800;
   }
 
@@ -283,9 +283,9 @@ export const FeatureCard = styled.div`
   display: block;
   height: 100%;
   padding: 26px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--border-soft);
   border-radius: 28px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface);
   text-decoration: none;
   transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
 
@@ -309,13 +309,13 @@ export const FeatureCard = styled.div`
 
   h3 {
     margin: 0 0 10px;
-    color: #ffffff;
+    color: var(--text-heading);
     font-size: 22px;
   }
 
   p {
     margin: 0;
-    color: rgba(231, 238, 251, 0.68);
+    color: var(--text-muted);
     line-height: 1.7;
   }
 `;
@@ -340,18 +340,18 @@ export const NearbyPanel = styled.div`
   border-radius: 30px;
   background:
     radial-gradient(circle at top left, rgba(32, 208, 163, 0.2), transparent 34%),
-    rgba(255, 255, 255, 0.08);
+    var(--surface);
 
   strong {
     display: block;
     margin-bottom: 6px;
-    color: #ffffff;
+    color: var(--text-heading);
     font-size: 20px;
   }
 
   p {
     margin: 0;
-    color: rgba(231, 238, 251, 0.7);
+    color: var(--text-muted);
     line-height: 1.7;
   }
 
@@ -395,8 +395,8 @@ export const ContactCard = styled.div`
   border-radius: 34px;
   background:
     radial-gradient(circle at 12% 0%, rgba(32, 208, 163, 0.2), transparent 28%),
-    linear-gradient(135deg, rgba(255, 255, 255, 0.11), rgba(255, 255, 255, 0.055));
-  box-shadow: 0 24px 90px rgba(0, 0, 0, 0.18);
+    linear-gradient(135deg, var(--surface-strong), rgba(255, 255, 255, 0.055));
+  box-shadow: 0 24px 90px var(--shadow-soft);
 
   > div > span {
     color: #9df8dc;
@@ -408,7 +408,7 @@ export const ContactCard = styled.div`
 
   h2 {
     margin: 10px 0 10px;
-    color: #ffffff;
+    color: var(--text-heading);
     font-size: clamp(30px, 4vw, 52px);
     line-height: 1.02;
     letter-spacing: -0.055em;
@@ -416,7 +416,7 @@ export const ContactCard = styled.div`
 
   p {
     margin: 0;
-    color: rgba(231, 238, 251, 0.72);
+    color: var(--text-muted);
     line-height: 1.7;
   }
 

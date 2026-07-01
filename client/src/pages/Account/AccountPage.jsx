@@ -24,11 +24,13 @@ import {
   SecurityItem,
   SecurityList
 } from './styles.js';
+import { usePreferences } from '../../context/AppPreferences.jsx';
 
 export function AccountPage() {
   const [form] = Form.useForm();
   const [securityForm] = Form.useForm();
   const { message, modal } = AntdApp.useApp();
+  const { t } = usePreferences();
   const navigate = useNavigate();
   const location = useLocation();
   const [user, setUser] = useState(null);
@@ -51,11 +53,11 @@ export function AccountPage() {
         });
       })
       .catch(() => {
-        message.warning('Bạn cần đăng nhập để quản lý tài khoản.');
+        message.warning(t('account.needLogin'));
         navigate('/login', { replace: true });
       })
       .finally(() => setLoading(false));
-  }, [form, message, navigate]);
+  }, [form, message, navigate, t]);
 
   useEffect(() => {
     if (!loading && location.hash === '#security') {
@@ -76,9 +78,9 @@ export function AccountPage() {
         }
       });
       setUser(updatedUser);
-      message.success('Đã cập nhật tài khoản.');
+      message.success(t('account.updated'));
     } catch (error) {
-      message.error(error.response?.data?.message || 'Không thể cập nhật tài khoản.');
+      message.error(error.response?.data?.message || t('account.updateError'));
     }
   };
 
@@ -95,9 +97,9 @@ export function AccountPage() {
         newPassword: values.newPassword
       });
       securityForm.resetFields();
-      message.success('Đã đổi mật khẩu. Lần đăng nhập sau hãy dùng mật khẩu mới.');
+      message.success(t('account.passwordChanged'));
     } catch (error) {
-      message.error(error.response?.data?.message || 'Không thể đổi mật khẩu.');
+      message.error(error.response?.data?.message || t('account.passwordError'));
     } finally {
       setSecurityLoading(false);
     }
@@ -107,20 +109,20 @@ export function AccountPage() {
     setVerificationLoading(true);
     try {
       const result = await resendVerificationEmail();
-      message.success(result.message || 'Đã gửi lại email xác minh.');
+      message.success(result.message || t('account.resendSent'));
       if (result.data?.verificationPreviewUrl) {
         modal.info({
-          title: 'Link xác minh email môi trường dev',
+          title: t('auth.devVerificationTitle'),
           content: (
             <div>
-              <p>Chưa cấu hình SMTP, dùng link này để test xác minh email:</p>
+              <p>{t('auth.devVerificationText')}</p>
               <a href={result.data.verificationPreviewUrl}>{result.data.verificationPreviewUrl}</a>
             </div>
           )
         });
       }
     } catch (error) {
-      message.error(error.response?.data?.message || 'Không thể gửi lại email xác minh.');
+      message.error(error.response?.data?.message || t('account.resendError'));
     } finally {
       setVerificationLoading(false);
     }
@@ -137,84 +139,82 @@ export function AccountPage() {
   return (
     <AccountPageWrap>
       <AccountPanel>
-        <span>Hồ sơ khách hàng</span>
-        <h1>Quản lý tài khoản của tôi</h1>
-        <p>
-          Cập nhật số điện thoại và địa chỉ để admin liên hệ đúng khi bạn lưu căn hộ ưa thích hoặc gửi nhu cầu tư vấn.
-        </p>
+        <span>{t('account.profileBadge')}</span>
+        <h1>{t('account.title')}</h1>
+        <p>{t('account.description')}</p>
         <Form form={form} layout="vertical" onFinish={handleSubmit}>
-          <Form.Item name="name" label="Họ tên" rules={[{ required: true, min: 2 }]}>
+          <Form.Item name="name" label={t('auth.name')} rules={[{ required: true, min: 2 }]}>
             <Input prefix={<UserOutlined />} />
           </Form.Item>
           <Form.Item name="email" label="Email">
             <Input prefix={<MailOutlined />} disabled />
           </Form.Item>
-          <Form.Item name="phone" label="Số điện thoại" rules={[{ required: true, min: 8 }]}>
+          <Form.Item name="phone" label={t('auth.phone')} rules={[{ required: true, min: 8 }]}>
             <Input prefix={<PhoneOutlined />} />
           </Form.Item>
-          <Form.Item name="street" label="Địa chỉ nơi ở" rules={[{ required: true, min: 2 }]}>
+          <Form.Item name="street" label={t('auth.street')} rules={[{ required: true, min: 2 }]}>
             <Input prefix={<HomeOutlined />} />
           </Form.Item>
-          <Form.Item name="ward" label="Phường/Xã">
+          <Form.Item name="ward" label={t('auth.ward')}>
             <Input />
           </Form.Item>
-          <Form.Item name="district" label="Quận/Huyện">
+          <Form.Item name="district" label={t('auth.district')}>
             <Input />
           </Form.Item>
-          <Form.Item name="city" label="Tỉnh/Thành phố">
+          <Form.Item name="city" label={t('auth.city')}>
             <Input />
           </Form.Item>
           <Button type="primary" htmlType="submit" block>
-            Lưu thông tin tài khoản
+            {t('account.save')}
           </Button>
         </Form>
       </AccountPanel>
 
       <AccountSideStack>
         <AccountPanel>
-          <span>Tổng quan</span>
+          <span>{t('account.overview')}</span>
           <h2>{user?.name || user?.email}</h2>
           <p>{user?.email}</p>
           <p>
-            Trạng thái email:{' '}
-            {user?.emailVerified ? <Tag color="green">Đã xác thực</Tag> : <Tag color="orange">Chưa xác thực</Tag>}
+            {t('account.emailStatus')}{' '}
+            {user?.emailVerified ? <Tag color="green">{t('account.verified')}</Tag> : <Tag color="orange">{t('account.unverified')}</Tag>}
           </p>
           <AccountActionGrid>
             <Button type="primary" size="large">
-              <Link to="/favorites">Quản lý căn hộ ưa thích</Link>
+              <Link to="/favorites">{t('favorites.title')}</Link>
             </Button>
             <Button size="large">
-              <Link to="/contact">Gửi yêu cầu tư vấn</Link>
+              <Link to="/contact">{t('common.sendConsultation')}</Link>
             </Button>
             {user?.role === 'admin' && (
               <Button size="large">
-                <Link to="/admin">Vào trang admin</Link>
+                <Link to="/admin">{t('account.admin')}</Link>
               </Button>
             )}
             <Button danger size="large" onClick={handleLogout}>
-              Đăng xuất
+              {t('common.logout')}
             </Button>
           </AccountActionGrid>
         </AccountPanel>
 
         <AccountPanel id="security">
-          <span>Bảo mật tài khoản</span>
-          <h2><SafetyCertificateOutlined /> Trung tâm bảo mật</h2>
-          <p>Kiểm tra xác minh email, cookie đăng nhập HTTP-only và đổi mật khẩu khách hàng.</p>
+          <span>{t('account.securityBadge')}</span>
+          <h2><SafetyCertificateOutlined /> {t('account.securityTitle')}</h2>
+          <p>{t('account.securityDescription')}</p>
           <SecurityList>
             <SecurityItem>
               <div>
-                <strong>Email xác minh</strong>
+                <strong>{t('account.emailVerification')}</strong>
                 <small>{user?.email}</small>
               </div>
-              {user?.emailVerified ? <Tag color="green">Đã xác thực</Tag> : <Tag color="orange">Chưa xác thực</Tag>}
+              {user?.emailVerified ? <Tag color="green">{t('account.verified')}</Tag> : <Tag color="orange">{t('account.unverified')}</Tag>}
             </SecurityItem>
             <SecurityItem>
               <div>
-                <strong>Phiên đăng nhập</strong>
-                <small>JWT được lưu trong signed HTTP-only cookie</small>
+                <strong>{t('account.session')}</strong>
+                <small>{t('account.sessionDescription')}</small>
               </div>
-              <Tag color="blue">Đang bảo vệ</Tag>
+              <Tag color="blue">{t('account.protected')}</Tag>
             </SecurityItem>
           </SecurityList>
 
@@ -225,35 +225,35 @@ export function AccountPage() {
               loading={verificationLoading}
               onClick={handleResendVerification}
             >
-              Gửi lại email xác minh
+              {t('account.resendVerification')}
             </Button>
           )}
 
           <Form form={securityForm} layout="vertical" onFinish={handlePasswordSubmit} style={{ marginTop: 18 }}>
-            <Form.Item name="currentPassword" label="Mật khẩu hiện tại" rules={[{ required: true, min: 8 }]}>
-              <Input.Password prefix={<LockOutlined />} placeholder="Nhập mật khẩu hiện tại" />
+            <Form.Item name="currentPassword" label={t('account.currentPassword')} rules={[{ required: true, min: 8 }]}>
+              <Input.Password prefix={<LockOutlined />} placeholder={t('account.currentPassword')} />
             </Form.Item>
-            <Form.Item name="newPassword" label="Mật khẩu mới" rules={[{ required: true, min: 8 }]}>
-              <Input.Password prefix={<LockOutlined />} placeholder="Tối thiểu 8 ký tự" />
+            <Form.Item name="newPassword" label={t('account.newPassword')} rules={[{ required: true, min: 8 }]}>
+              <Input.Password prefix={<LockOutlined />} placeholder={t('auth.minPassword')} />
             </Form.Item>
             <Form.Item
               name="confirmPassword"
-              label="Nhập lại mật khẩu mới"
+              label={t('account.confirmPassword')}
               dependencies={['newPassword']}
               rules={[
                 { required: true, min: 8 },
                 ({ getFieldValue }) => ({
                   validator(_, value) {
                     if (!value || getFieldValue('newPassword') === value) return Promise.resolve();
-                    return Promise.reject(new Error('Mật khẩu nhập lại chưa khớp.'));
+                    return Promise.reject(new Error(t('account.passwordMismatch')));
                   }
                 })
               ]}
             >
-              <Input.Password prefix={<LockOutlined />} placeholder="Nhập lại mật khẩu mới" />
+              <Input.Password prefix={<LockOutlined />} placeholder={t('account.confirmPassword')} />
             </Form.Item>
             <Button type="primary" htmlType="submit" block loading={securityLoading}>
-              Đổi mật khẩu
+              {t('account.changePassword')}
             </Button>
           </Form>
         </AccountPanel>

@@ -2,6 +2,7 @@ import { Alert, Button, Space } from 'antd';
 import { EnvironmentFilled } from '@ant-design/icons';
 import { GoogleMap, InfoWindowF, MarkerF, useJsApiLoader } from '@react-google-maps/api';
 import { useMemo, useState } from 'react';
+import { usePreferences } from '../../context/AppPreferences.jsx';
 import { MapCard, MapFrame, MapToolbar } from './styles.js';
 
 const center = { lat: 16.0678, lng: 108.2208 };
@@ -42,22 +43,23 @@ function buildGoogleMapsUrl(marker) {
 }
 
 function OpenStreetMapView({ markers }) {
+  const { t } = usePreferences();
   const mainMarker = markers[0];
 
   return (
     <MapCard>
       <MapToolbar>
         <div>
-          <span>Bản đồ căn hộ</span>
-          <strong>{markers.length} vị trí</strong>
+          <span>{t('map.title')}</span>
+          <strong>{t('map.positions', { count: markers.length })}</strong>
         </div>
         <Button href={buildGoogleMapsUrl(mainMarker)} target="_blank" rel="noreferrer">
-          Mở Google Maps
+          {t('common.openGoogleMaps')}
         </Button>
       </MapToolbar>
 
       <MapFrame
-        title={`Bản đồ ${mainMarker?.title || 'căn hộ Đà Nẵng'}`}
+        title={`${t('map.title')} ${mainMarker?.title || 'Da Nang'}`}
         src={buildOpenStreetMapUrl(mainMarker)}
         loading="lazy"
       />
@@ -76,7 +78,7 @@ function OpenStreetMapView({ markers }) {
           <Alert
             type="warning"
             showIcon
-            message="Chưa có tọa độ cho căn hộ này."
+            message={t('common.noCoordinates')}
           />
         )}
       </Space>
@@ -85,6 +87,7 @@ function OpenStreetMapView({ markers }) {
 }
 
 function GoogleMapView({ apiKey, markers }) {
+  const { t } = usePreferences();
   const [activeApartment, setActiveApartment] = useState(null);
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
@@ -95,8 +98,8 @@ function GoogleMapView({ apiKey, markers }) {
     <MapCard>
       <MapToolbar>
         <div>
-          <span>Bản đồ căn hộ</span>
-          <strong>{markers.length} vị trí</strong>
+          <span>{t('map.title')}</span>
+          <strong>{t('map.positions', { count: markers.length })}</strong>
         </div>
       </MapToolbar>
       {isLoaded && (

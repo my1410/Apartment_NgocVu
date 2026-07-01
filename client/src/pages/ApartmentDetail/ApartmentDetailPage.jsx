@@ -4,6 +4,7 @@ import { ArrowLeftOutlined, EnvironmentOutlined, HeartOutlined, PhoneOutlined } 
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { MapView } from '../../components/MapView/MapView.jsx';
 import { createInterest, getApartment, getCurrentUser, toggleFavorite } from '../../services/apiClient.js';
+import { usePreferences } from '../../context/AppPreferences.jsx';
 import { DetailGrid, DetailHero, DetailPage, GalleryShell, GallerySlide, GlassPanel, ThumbGrid } from './styles.js';
 
 const galleryFallbacks = [
@@ -18,6 +19,7 @@ export function ApartmentDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { message } = AntdApp.useApp();
+  const { t } = usePreferences();
   const [apartment, setApartment] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -46,7 +48,7 @@ export function ApartmentDetailPage() {
 
   const requireUser = () => {
     if (!user) {
-      message.warning('Bạn cần đăng nhập để dùng chức năng này.');
+      message.warning(t('detail.loginRequired'));
       navigate('/login');
       return false;
     }
@@ -56,25 +58,31 @@ export function ApartmentDetailPage() {
   const handleFavorite = async () => {
     if (!requireUser()) return;
     await toggleFavorite(apartment.id);
-    message.success('Đã cập nhật căn hộ ưa thích.');
+    message.success(t('detail.favoriteUpdated'));
   };
 
   const handleInterest = async () => {
     if (!requireUser()) return;
     await createInterest(apartment.id, 'Khách hàng quan tâm căn hộ từ trang chi tiết.');
-    message.success('Admin đã nhận được nhu cầu của bạn và sẽ liên hệ lại.');
+    message.success(t('detail.interestSent'));
   };
+
+  const statusLabel = apartment.status === 'Đang bán'
+    ? t('common.forSaleStatus')
+    : apartment.status === 'Cho thuê'
+      ? t('common.forRentStatus')
+      : apartment.status;
 
   return (
     <DetailPage>
       <Button icon={<ArrowLeftOutlined />}>
-        <Link to="/apartments">Quay lại danh mục</Link>
+        <Link to="/apartments">{t('common.backToApartments')}</Link>
       </Button>
 
       <DetailHero $image={apartment.image}>
         <div>
           <Space wrap>
-            <Tag color={soldOut ? 'red' : 'green'}>{soldOut ? 'Đã hết' : apartment.status}</Tag>
+            <Tag color={soldOut ? 'red' : 'green'}>{soldOut ? t('common.soldOut') : statusLabel}</Tag>
             <Tag>{apartment.type}</Tag>
             <Tag>{apartment.districtLabel}</Tag>
           </Space>
@@ -85,14 +93,16 @@ export function ApartmentDetailPage() {
 
       <DetailGrid>
         <GlassPanel>
-          <h2>Thông tin căn hộ</h2>
+          <h2>{t('detail.infoTitle')}</h2>
           <Descriptions column={{ xs: 1, md: 2 }} bordered>
-            <Descriptions.Item label="Giá bán">{apartment.priceLabel}</Descriptions.Item>
-            <Descriptions.Item label="Giá thuê">{apartment.rentLabel}</Descriptions.Item>
-            <Descriptions.Item label="Diện tích">{apartment.area} m2</Descriptions.Item>
-            <Descriptions.Item label="Phòng ngủ">{apartment.bedrooms}</Descriptions.Item>
-            <Descriptions.Item label="Phòng tắm">{apartment.bathrooms}</Descriptions.Item>
-            <Descriptions.Item label="Số lượng còn">{soldOut ? 'Đã hết' : apartment.availableUnits}</Descriptions.Item>
+            <Descriptions.Item label={t('detail.salePrice')}>{apartment.priceLabel}</Descriptions.Item>
+            <Descriptions.Item label={t('detail.rentPrice')}>{apartment.rentLabel}</Descriptions.Item>
+            <Descriptions.Item label={t('detail.area')}>{apartment.area} m2</Descriptions.Item>
+            <Descriptions.Item label={t('detail.bedrooms')}>{apartment.bedrooms}</Descriptions.Item>
+            <Descriptions.Item label={t('detail.bathrooms')}>{apartment.bathrooms}</Descriptions.Item>
+            <Descriptions.Item label={t('detail.availableUnits')}>
+              {soldOut ? t('common.soldOut') : apartment.availableUnits}
+            </Descriptions.Item>
           </Descriptions>
           <p>{apartment.description}</p>
           <Space size={[8, 8]} wrap>
@@ -100,10 +110,10 @@ export function ApartmentDetailPage() {
           </Space>
           <Space wrap>
             <Button icon={<HeartOutlined />} onClick={handleFavorite}>
-              Lưu căn hộ ưa thích
+              {t('detail.saveFavorite')}
             </Button>
             <Button type="primary" size="large" icon={<PhoneOutlined />} disabled={soldOut} onClick={handleInterest}>
-              {soldOut ? 'Căn hộ đã hết' : 'Tôi thích căn hộ này'}
+              {soldOut ? t('detail.soldOutButton') : t('common.likeThisApartment')}
             </Button>
           </Space>
         </GlassPanel>
@@ -111,20 +121,20 @@ export function ApartmentDetailPage() {
       </DetailGrid>
 
       <GlassPanel>
-        <h2>Hình ảnh căn hộ</h2>
+        <h2>{t('detail.galleryTitle')}</h2>
         <GalleryShell>
           <Carousel autoplay autoplaySpeed={3200} dots effect="fade">
             {galleryImages.map((image, index) => (
               <GallerySlide key={image}>
                 <Image
                   src={image}
-                  alt={`${apartment.title} - ảnh ${index + 1}`}
+                  alt={t('detail.galleryAlt', { title: apartment.title, index: index + 1 })}
                   preview={false}
                 />
                 <div>
                   <span>{String(index + 1).padStart(2, '0')} / {String(galleryImages.length).padStart(2, '0')}</span>
                   <strong>{apartment.title}</strong>
-                  <p>Không gian căn hộ, tiện ích và phong cách sống hiện đại tại {apartment.districtLabel}.</p>
+                  <p>{t('detail.galleryText', { district: apartment.districtLabel })}</p>
                 </div>
               </GallerySlide>
             ))}

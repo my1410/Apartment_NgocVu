@@ -4,9 +4,9 @@ export const FilterCard = styled.div`
   min-width: 0;
   max-width: 100%;
   padding: 24px;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  border: 1px solid var(--border-soft);
   border-radius: 28px;
-  background: rgba(255, 255, 255, 0.08);
+  background: var(--surface);
   box-shadow: 0 22px 70px rgba(0, 0, 0, 0.16);
 
   .ant-select,
@@ -22,7 +22,7 @@ export const FilterCard = styled.div`
   label {
     display: block;
     margin-bottom: 10px;
-    color: rgba(231, 238, 251, 0.72);
+    color: var(--text-muted);
     font-weight: 700;
   }
 
@@ -58,7 +58,7 @@ export const FilterTitle = styled.div`
 
   h3 {
     margin: 4px 0 0;
-    color: #ffffff;
+    color: var(--text-heading);
     font-size: clamp(20px, 2vw, 26px);
   }
 
