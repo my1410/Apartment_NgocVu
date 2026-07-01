@@ -19,6 +19,8 @@ import {
   Tooltip
 } from 'antd';
 import {
+  BarChartOutlined,
+  CalendarOutlined,
   ContactsOutlined,
   DeleteOutlined,
   EditOutlined,
@@ -37,14 +39,17 @@ import { daNangLocations } from '../../data/vietnamLocations.js';
 import {
   createApartment,
   deleteApartment,
+  getApartmentAnalytics,
   getApartments,
   getContactRequests,
   getCurrentUser,
   getInterests,
+  getViewingAppointments,
   logout,
   updateApartment,
   updateContactRequest,
-  updateInterest
+  updateInterest,
+  updateViewingAppointment
 } from '../../services/apiClient.js';
 import {
   AdminHeader,
@@ -78,6 +83,13 @@ const leadStatusOptions = [
   { label: 'Mới', value: 'new' },
   { label: 'Đã liên hệ', value: 'contacted' },
   { label: 'Đã chốt', value: 'closed' }
+];
+
+const viewingStatusOptions = [
+  { label: 'Mới gửi', value: 'new' },
+  { label: 'Đã xác nhận', value: 'confirmed' },
+  { label: 'Đã xem', value: 'visited' },
+  { label: 'Đã hủy', value: 'cancelled' }
 ];
 
 function formatPriceLabel(price) {
@@ -268,6 +280,8 @@ export function AdminDashboard() {
   const [apartments, setApartments] = useState([]);
   const [interests, setInterests] = useState([]);
   const [contacts, setContacts] = useState([]);
+  const [viewings, setViewings] = useState([]);
+  const [analytics, setAnalytics] = useState(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [editingApartment, setEditingApartment] = useState(null);
@@ -276,18 +290,23 @@ export function AdminDashboard() {
   const [stockFilter, setStockFilter] = useState('all');
   const [leadFilter, setLeadFilter] = useState('all');
   const [contactFilter, setContactFilter] = useState('all');
+  const [viewingFilter, setViewingFilter] = useState('all');
   const [authChecked, setAuthChecked] = useState(false);
 
   const loadDashboard = async () => {
     setLoading(true);
-    const [items, leadItems, contactItems] = await Promise.all([
+    const [items, leadItems, contactItems, viewingItems, analyticsData] = await Promise.all([
       getApartments(),
       getInterests().catch(() => []),
-      getContactRequests().catch(() => [])
+      getContactRequests().catch(() => []),
+      getViewingAppointments().catch(() => []),
+      getApartmentAnalytics().catch(() => null)
     ]);
     setApartments(items);
     setInterests(leadItems);
     setContacts(contactItems);
+    setViewings(viewingItems);
+    setAnalytics(analyticsData);
     setLoading(false);
   };
 
@@ -310,7 +329,9 @@ export function AdminDashboard() {
     const featured = apartments.filter((apartment) => apartment.featured).length;
     const newLeads = interests.filter((interest) => interest.status === 'new').length;
     const newContacts = contacts.filter((contact) => contact.status === 'new').length;
+    const newViewings = viewings.filter((viewing) => viewing.status === 'new').length;
     const totalValue = apartments.reduce((sum, apartment) => sum + Number(apartment.price || 0), 0);
+    const totalViews = analytics?.conversion?.views || 0;
 
     return {
       total: apartments.length,
@@ -319,9 +340,11 @@ export function AdminDashboard() {
       featured,
       newLeads,
       newContacts,
+      newViewings,
+      totalViews,
       totalValue: `${(totalValue / 1000000000).toFixed(1)} tỷ`
     };
-  }, [apartments, interests, contacts]);
+  }, [apartments, interests, contacts, viewings, analytics]);
 
   const filteredApartments = useMemo(() => apartments.filter((apartment) => {
     const searchText = `${apartment.title} ${apartment.address} ${apartment.districtLabel} ${apartment.ward}`.toLowerCase();
@@ -342,6 +365,10 @@ export function AdminDashboard() {
   const filteredContacts = useMemo(() => contacts.filter((contact) => (
     contactFilter === 'all' || contact.status === contactFilter
   )), [contacts, contactFilter]);
+
+  const filteredViewings = useMemo(() => viewings.filter((viewing) => (
+    viewingFilter === 'all' || viewing.status === viewingFilter
+  )), [viewings, viewingFilter]);
 
   const handleCreateApartment = async (values) => {
     setSaving(true);
@@ -415,6 +442,14 @@ export function AdminDashboard() {
       (item.id || item._id) === (updatedContact.id || updatedContact._id) ? updatedContact : item
     )));
     message.success('Đã cập nhật yêu cầu liên hệ.');
+  };
+
+  const handleViewingStatus = async (viewing, status) => {
+    const updatedViewing = await updateViewingAppointment(viewing.id || viewing._id, { status });
+    setViewings((current) => current.map((item) => (
+      (item.id || item._id) === (updatedViewing.id || updatedViewing._id) ? updatedViewing : item
+    )));
+    message.success('Đã cập nhật lịch xem căn hộ.');
   };
 
   const handleLogout = async () => {
@@ -629,6 +664,65 @@ export function AdminDashboard() {
     }
   ];
 
+  const viewingColumns = [
+    {
+      title: 'Khách đặt lịch',
+      key: 'customer',
+      width: 260,
+      render: (_, record) => (
+        <div>
+          <strong>{record.user?.name || record.user?.email}</strong>
+          <p>{record.user?.email}</p>
+          <Space size={[6, 6]} wrap>
+            {record.user?.phone && <Button size="small" href={`tel:${record.user.phone}`}>Gọi</Button>}
+            {record.user?.email && <Button size="small" href={`mailto:${record.user.email}`}>Email</Button>}
+          </Space>
+        </div>
+      )
+    },
+    {
+      title: 'Căn hộ',
+      key: 'apartment',
+      width: 300,
+      render: (_, record) => (
+        <div>
+          <strong>{record.apartment?.title}</strong>
+          <p>{record.apartment?.address}</p>
+          <Tag>{record.apartment?.priceLabel}</Tag>
+        </div>
+      )
+    },
+    {
+      title: 'Thời gian xem',
+      dataIndex: 'preferredAt',
+      key: 'preferredAt',
+      width: 190,
+      render: (preferredAt) => new Date(preferredAt).toLocaleString('vi-VN')
+    },
+    {
+      title: 'Ghi chú',
+      dataIndex: 'note',
+      key: 'note',
+      width: 260,
+      render: (note) => note || 'Khách chưa ghi chú'
+    },
+    {
+      title: 'Trạng thái',
+      dataIndex: 'status',
+      key: 'status',
+      fixed: 'right',
+      width: 190,
+      render: (status, record) => (
+        <Select
+          value={status}
+          style={{ width: 150 }}
+          options={viewingStatusOptions}
+          onChange={(nextStatus) => handleViewingStatus(record, nextStatus)}
+        />
+      )
+    }
+  ];
+
   if (!authChecked) {
     return <AdminPage>Đang kiểm tra phiên đăng nhập...</AdminPage>;
   }
@@ -669,6 +763,12 @@ export function AdminDashboard() {
         </Card>
         <Card>
           <Statistic title="Liên hệ mới" value={stats.newContacts} prefix={<ContactsOutlined />} />
+        </Card>
+        <Card>
+          <Statistic title="Lịch xem mới" value={stats.newViewings} prefix={<CalendarOutlined />} />
+        </Card>
+        <Card>
+          <Statistic title="Lượt xem căn hộ" value={stats.totalViews} prefix={<BarChartOutlined />} />
         </Card>
         <Card>
           <Statistic title="Tổng giá trị rao bán" value={stats.totalValue} />
@@ -770,6 +870,32 @@ export function AdminDashboard() {
             />
           </TableCard>
 
+          <TableCard title="Lịch xem căn hộ">
+            <FilterBar>
+              <Select
+                value={viewingFilter}
+                onChange={setViewingFilter}
+                options={[
+                  { label: 'Tất cả lịch xem', value: 'all' },
+                  ...viewingStatusOptions
+                ]}
+              />
+            </FilterBar>
+            <Toolbar>
+              <strong>{filteredViewings.length}</strong>
+              <span>lịch xem cần điều phối</span>
+            </Toolbar>
+            <Table
+              rowKey={(record) => record.id || record._id}
+              columns={viewingColumns}
+              dataSource={filteredViewings}
+              loading={loading}
+              pagination={{ pageSize: 5 }}
+              scroll={{ x: 1200 }}
+              locale={{ emptyText: <Empty description="Chưa có lịch xem căn hộ" /> }}
+            />
+          </TableCard>
+
           <TableCard title="Yêu cầu liên hệ từ website">
             <FilterBar>
               <Select
@@ -794,6 +920,37 @@ export function AdminDashboard() {
               scroll={{ x: 1100 }}
               locale={{ emptyText: <Empty description="Chưa có yêu cầu liên hệ" /> }}
             />
+          </TableCard>
+
+          <TableCard title="Analytics hành vi khách hàng">
+            <Row gutter={[16, 16]}>
+              <Col xs={24} md={12}>
+                <Card title="Khu vực nhiều căn hộ">
+                  <Space direction="vertical" style={{ width: '100%' }}>
+                    {(analytics?.districts || []).slice(0, 5).map((item) => (
+                      <div key={item.district}>
+                        <strong>{item.district}</strong>
+                        <p>{item.apartments} căn • còn {item.availableUnits} • {(item.totalValue / 1000000000).toFixed(1)} tỷ</p>
+                      </div>
+                    ))}
+                    {!analytics?.districts?.length && <Empty description="Chưa có dữ liệu khu vực" />}
+                  </Space>
+                </Card>
+              </Col>
+              <Col xs={24} md={12}>
+                <Card title="Căn được xem nhiều">
+                  <Space direction="vertical" style={{ width: '100%' }}>
+                    {(analytics?.topViewed || []).slice(0, 5).map((item) => (
+                      <div key={item.apartment?._id || item.apartment?.id}>
+                        <strong>{item.apartment?.title || 'Căn hộ'}</strong>
+                        <p>{item.count} lượt xem • {item.interestCount} nhu cầu • {item.apartment?.priceLabel}</p>
+                      </div>
+                    ))}
+                    {!analytics?.topViewed?.length && <Empty description="Chưa có dữ liệu lượt xem" />}
+                  </Space>
+                </Card>
+              </Col>
+            </Row>
           </TableCard>
         </div>
       </ManagementGrid>

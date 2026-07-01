@@ -1,9 +1,29 @@
 import { useEffect, useState } from 'react';
-import { App as AntdApp, Button, Carousel, Descriptions, Image, Space, Spin, Tag } from 'antd';
-import { ArrowLeftOutlined, EnvironmentOutlined, HeartOutlined, PhoneOutlined } from '@ant-design/icons';
+import {
+  App as AntdApp,
+  Button,
+  Carousel,
+  DatePicker,
+  Descriptions,
+  Form,
+  Image,
+  Input,
+  Modal,
+  Space,
+  Spin,
+  Tag
+} from 'antd';
+import { ArrowLeftOutlined, CalendarOutlined, EnvironmentOutlined, HeartOutlined, PhoneOutlined } from '@ant-design/icons';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { MapView } from '../../components/MapView/MapView.jsx';
-import { createInterest, getApartment, getCurrentUser, toggleFavorite } from '../../services/apiClient.js';
+import {
+  createInterest,
+  createViewingAppointment,
+  getApartment,
+  getCurrentUser,
+  recordApartmentView,
+  toggleFavorite
+} from '../../services/apiClient.js';
 import { usePreferences } from '../../context/AppPreferences.jsx';
 import { DetailGrid, DetailHero, DetailPage, GalleryShell, GallerySlide, GlassPanel, ThumbGrid } from './styles.js';
 
@@ -18,11 +38,14 @@ const galleryFallbacks = [
 export function ApartmentDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [scheduleForm] = Form.useForm();
   const { message } = AntdApp.useApp();
   const { t } = usePreferences();
   const [apartment, setApartment] = useState(null);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [scheduleOpen, setScheduleOpen] = useState(false);
+  const [scheduleLoading, setScheduleLoading] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -32,6 +55,9 @@ export function ApartmentDetailPage() {
       setApartment(item);
       setUser(currentUser);
       setLoading(false);
+      if (currentUser) {
+        recordApartmentView(item.id).catch(() => {});
+      }
     });
   }, [id]);
 
@@ -65,6 +91,29 @@ export function ApartmentDetailPage() {
     if (!requireUser()) return;
     await createInterest(apartment.id, 'Khách hàng quan tâm căn hộ từ trang chi tiết.');
     message.success(t('detail.interestSent'));
+  };
+
+  const openSchedule = () => {
+    if (!requireUser()) return;
+    setScheduleOpen(true);
+  };
+
+  const handleScheduleSubmit = async (values) => {
+    if (!requireUser()) return;
+    setScheduleLoading(true);
+    try {
+      await createViewingAppointment(apartment.id, {
+        preferredAt: values.preferredAt.toISOString(),
+        note: values.note
+      });
+      scheduleForm.resetFields();
+      setScheduleOpen(false);
+      message.success(t('detail.scheduleSuccess'));
+    } catch (error) {
+      message.error(error.response?.data?.message || t('detail.scheduleError'));
+    } finally {
+      setScheduleLoading(false);
+    }
   };
 
   const statusLabel = apartment.status === 'Đang bán'
@@ -115,6 +164,9 @@ export function ApartmentDetailPage() {
             <Button type="primary" size="large" icon={<PhoneOutlined />} disabled={soldOut} onClick={handleInterest}>
               {soldOut ? t('detail.soldOutButton') : t('common.likeThisApartment')}
             </Button>
+            <Button size="large" icon={<CalendarOutlined />} disabled={soldOut} onClick={openSchedule}>
+              {t('detail.scheduleViewing')}
+            </Button>
           </Space>
         </GlassPanel>
         <MapView apartments={[apartment]} />
@@ -150,6 +202,29 @@ export function ApartmentDetailPage() {
           ))}
         </ThumbGrid>
       </GlassPanel>
+
+      <Modal
+        title={t('detail.scheduleTitle')}
+        open={scheduleOpen}
+        onCancel={() => setScheduleOpen(false)}
+        onOk={() => scheduleForm.submit()}
+        okText={t('detail.scheduleViewing')}
+        cancelText="Hủy"
+        confirmLoading={scheduleLoading}
+      >
+        <Form form={scheduleForm} layout="vertical" onFinish={handleScheduleSubmit}>
+          <Form.Item
+            name="preferredAt"
+            label={t('detail.scheduleTime')}
+            rules={[{ required: true, message: t('detail.scheduleTime') }]}
+          >
+            <DatePicker showTime style={{ width: '100%' }} format="DD/MM/YYYY HH:mm" />
+          </Form.Item>
+          <Form.Item name="note" label={t('detail.scheduleNote')}>
+            <Input.TextArea rows={4} placeholder={t('detail.schedulePlaceholder')} />
+          </Form.Item>
+        </Form>
+      </Modal>
     </DetailPage>
   );
 }

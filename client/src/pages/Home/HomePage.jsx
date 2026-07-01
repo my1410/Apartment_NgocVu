@@ -18,6 +18,7 @@ import {
   getApartments,
   getCurrentUser,
   getFavorites,
+  getPersonalRecommendations,
   toggleFavorite
 } from '../../services/apiClient.js';
 import { resolveAddressLocation, scoreApartmentByAddress } from '../../utils/locationMatch.js';
@@ -79,8 +80,10 @@ export function HomePage() {
   const { t } = usePreferences();
   const [apartments, setApartments] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState([]);
+  const [personalRecommendations, setPersonalRecommendations] = useState([]);
   const [user, setUser] = useState(null);
   const [loadingNearby, setLoadingNearby] = useState(true);
+  const [loadingPersonal, setLoadingPersonal] = useState(false);
 
   useEffect(() => {
     Promise.all([
@@ -92,6 +95,13 @@ export function HomePage() {
       setUser(currentUser);
       setFavoriteIds(favorites.map((apartment) => apartment.id));
       setLoadingNearby(false);
+      if (currentUser) {
+        setLoadingPersonal(true);
+        getPersonalRecommendations()
+          .then((result) => setPersonalRecommendations(result.apartments || []))
+          .catch(() => setPersonalRecommendations([]))
+          .finally(() => setLoadingPersonal(false));
+      }
     });
   }, []);
 
@@ -245,6 +255,43 @@ export function HomePage() {
           </ApartmentGrid>
         ) : (
           <Empty description={user ? t('home.emptyNearbyUser') : t('home.emptyNearbyGuest')} />
+        )}
+      </Section>
+
+      <Section
+        as={motion.section}
+        variants={reveal}
+        initial="hidden"
+        whileInView="visible"
+        viewport={{ once: true, margin: '-80px' }}
+        transition={{ duration: 0.55 }}
+      >
+        <SectionHeader
+          eyebrow={t('home.personalEyebrow')}
+          title={t('home.personalTitle')}
+          description={t('home.personalDescription')}
+        />
+        {loadingPersonal ? (
+          <Spin size="large" />
+        ) : user && personalRecommendations.length ? (
+          <ApartmentGrid>
+            {personalRecommendations.slice(0, 4).map((apartment, index) => (
+              <ApartmentCard
+                key={apartment.id}
+                apartment={apartment}
+                index={index}
+                favorited={favoriteIds.includes(apartment.id)}
+                onFavorite={handleFavorite}
+                onInterest={handleInterest}
+              />
+            ))}
+          </ApartmentGrid>
+        ) : (
+          <Empty description={t('home.personalEmpty')}>
+            <Button type="primary">
+              <Link to={user ? '/apartments' : '/login'}>{user ? t('common.viewApartments') : t('common.login')}</Link>
+            </Button>
+          </Empty>
         )}
       </Section>
 

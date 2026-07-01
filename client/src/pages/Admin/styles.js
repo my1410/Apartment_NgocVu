@@ -53,7 +53,7 @@ export const AdminHeader = styled.header`
 
 export const KpiGrid = styled.section`
   display: grid;
-  grid-template-columns: repeat(6, minmax(0, 1fr));
+  grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 16px;
 
   .ant-card {
@@ -80,7 +80,7 @@ export const KpiGrid = styled.section`
   }
 
   @media (max-width: 1200px) {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
   @media (max-width: 640px) {

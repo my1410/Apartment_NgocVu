@@ -1,11 +1,26 @@
 import { Badge, Button, Card, Space, Tag } from 'antd';
-import { EnvironmentOutlined, HeartFilled, HeartOutlined, HomeOutlined, PictureOutlined } from '@ant-design/icons';
+import {
+  EnvironmentOutlined,
+  HeartFilled,
+  HeartOutlined,
+  HomeOutlined,
+  PictureOutlined,
+  SwapOutlined
+} from '@ant-design/icons';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { usePreferences } from '../../context/AppPreferences.jsx';
 import { AvailabilityBar, CardBody, Image, MetaGrid, TitleRow } from './styles.js';
 
-export function ApartmentCard({ apartment, index = 0, favorited = false, onFavorite, onInterest }) {
+export function ApartmentCard({
+  apartment,
+  index = 0,
+  favorited = false,
+  compared = false,
+  onCompare,
+  onFavorite,
+  onInterest
+}) {
   const navigate = useNavigate();
   const { t } = usePreferences();
   const soldOut = (apartment.availableUnits ?? 1) <= 0;
@@ -46,6 +61,14 @@ export function ApartmentCard({ apartment, index = 0, favorited = false, onFavor
             {t('common.viewDetail')}
           </Button>
           <Space.Compact block>
+            <Button
+              block
+              type={compared ? 'primary' : 'default'}
+              icon={<SwapOutlined />}
+              onClick={() => onCompare?.(apartment)}
+            >
+              {compared ? t('common.compared') : t('common.compare')}
+            </Button>
             <Button
               block
               icon={favorited ? <HeartFilled /> : <HeartOutlined />}

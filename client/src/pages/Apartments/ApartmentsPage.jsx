@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { App as AntdApp, Button, Card, Empty, Spin } from 'antd';
+import { App as AntdApp, Button, Card, Empty, Modal, Space, Spin, Table, Tag } from 'antd';
 import { BulbOutlined } from '@ant-design/icons';
 import { useSearchParams } from 'react-router-dom';
 import { ApartmentCard } from '../../components/ApartmentCard/ApartmentCard.jsx';
@@ -35,6 +35,8 @@ export function ApartmentsPage() {
   const [apartments, setApartments] = useState([]);
   const [favoriteIds, setFavoriteIds] = useState([]);
   const [filters, setFilters] = useState(defaultFilters);
+  const [compareIds, setCompareIds] = useState([]);
+  const [compareOpen, setCompareOpen] = useState(false);
   const [loading, setLoading] = useState(true);
   const [user, setUser] = useState(null);
   const queryDistrict = searchParams.get('district') || undefined;
@@ -87,6 +89,47 @@ export function ApartmentsPage() {
     return available.find((apartment) => apartment.featured) || available[0];
   }, [filteredApartments]);
 
+  const comparedApartments = useMemo(() => compareIds
+    .map((id) => apartments.find((apartment) => apartment.id === id))
+    .filter(Boolean), [apartments, compareIds]);
+
+  const compareRows = useMemo(() => [
+    { key: 'price', metric: 'Giá bán', getValue: (apartment) => apartment.priceLabel },
+    { key: 'rent', metric: 'Giá thuê', getValue: (apartment) => apartment.rentLabel },
+    { key: 'area', metric: 'Diện tích', getValue: (apartment) => `${apartment.area} m2` },
+    { key: 'bedrooms', metric: 'Phòng ngủ', getValue: (apartment) => apartment.bedrooms },
+    { key: 'bathrooms', metric: 'Phòng tắm', getValue: (apartment) => apartment.bathrooms },
+    { key: 'district', metric: 'Khu vực', getValue: (apartment) => apartment.districtLabel },
+    { key: 'status', metric: 'Trạng thái', getValue: (apartment) => apartment.status },
+    {
+      key: 'stock',
+      metric: 'Tồn kho',
+      getValue: (apartment) => ((apartment.availableUnits ?? 0) > 0 ? `Còn ${apartment.availableUnits}` : 'Đã hết')
+    },
+    { key: 'tags', metric: 'Điểm mạnh', getValue: (apartment) => apartment.tags?.slice(0, 3).join(', ') || '-' }
+  ].map((row) => ({
+    key: row.key,
+    metric: row.metric,
+    ...Object.fromEntries(comparedApartments.map((apartment) => [apartment.id, row.getValue(apartment)]))
+  })), [comparedApartments]);
+
+  const compareColumns = useMemo(() => [
+    {
+      title: 'Tiêu chí',
+      dataIndex: 'metric',
+      key: 'metric',
+      fixed: 'left',
+      width: 140
+    },
+    ...comparedApartments.map((apartment) => ({
+      title: apartment.title,
+      dataIndex: apartment.id,
+      key: apartment.id,
+      width: 220,
+      render: (value) => value || '-'
+    }))
+  ], [comparedApartments]);
+
   const updateFilters = (nextFilters) => {
     setFilters((current) => ({ ...current, ...nextFilters }));
   };
@@ -110,6 +153,19 @@ export function ApartmentsPage() {
     message.success(t('apartments.interestSent'));
   };
 
+  const handleCompare = (apartment) => {
+    setCompareIds((current) => {
+      if (current.includes(apartment.id)) {
+        return current.filter((id) => id !== apartment.id);
+      }
+      if (current.length >= 4) {
+        message.warning(t('apartments.compareLimit'));
+        return current;
+      }
+      return [...current, apartment.id];
+    });
+  };
+
   return (
     <HomeWrap>
       <PageHero>
@@ -126,6 +182,23 @@ export function ApartmentsPage() {
           onChange={updateFilters}
           onReset={() => setFilters(defaultFilters)}
         />
+
+        <Card>
+          <Space wrap align="center" size={12}>
+            <Tag color="cyan">{t('apartments.compareSelected', { count: comparedApartments.length })}</Tag>
+            <span>{t('apartments.compareHint')}</span>
+            <Button
+              type="primary"
+              disabled={comparedApartments.length < 2}
+              onClick={() => setCompareOpen(true)}
+            >
+              {t('apartments.openCompare')}
+            </Button>
+            <Button disabled={!comparedApartments.length} onClick={() => setCompareIds([])}>
+              {t('apartments.clearCompare')}
+            </Button>
+          </Space>
+        </Card>
 
         {recommendation && (
           <AiPanel>
@@ -159,6 +232,8 @@ export function ApartmentsPage() {
                     apartment={apartment}
                     index={index}
                     favorited={favoriteIds.includes(apartment.id)}
+                    compared={compareIds.includes(apartment.id)}
+                    onCompare={handleCompare}
                     onFavorite={handleFavorite}
                     onInterest={handleInterest}
                   />
@@ -175,6 +250,22 @@ export function ApartmentsPage() {
           </StickyMap>
         </ContentGrid>
       </Section>
+
+      <Modal
+        title={t('apartments.compareTitle')}
+        open={compareOpen}
+        onCancel={() => setCompareOpen(false)}
+        footer={null}
+        width={1100}
+      >
+        <Table
+          rowKey="key"
+          columns={compareColumns}
+          dataSource={compareRows}
+          pagination={false}
+          scroll={{ x: 760 }}
+        />
+      </Modal>
     </HomeWrap>
   );
 }

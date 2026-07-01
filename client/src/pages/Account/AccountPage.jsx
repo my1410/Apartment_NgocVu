@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { App as AntdApp, Button, Form, Input, Spin, Tag } from 'antd';
 import {
+  CalendarOutlined,
   HomeOutlined,
   LockOutlined,
   MailOutlined,
@@ -11,6 +12,7 @@ import {
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   getCurrentUser,
+  getMyViewingAppointments,
   logout,
   resendVerificationEmail,
   updateCurrentUser,
@@ -35,6 +37,7 @@ export function AccountPage() {
   const location = useLocation();
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [appointments, setAppointments] = useState([]);
   const [securityLoading, setSecurityLoading] = useState(false);
   const [verificationLoading, setVerificationLoading] = useState(false);
 
@@ -51,6 +54,9 @@ export function AccountPage() {
           district: currentUser.address?.district,
           city: currentUser.address?.city || 'Đà Nẵng'
         });
+        getMyViewingAppointments()
+          .then(setAppointments)
+          .catch(() => setAppointments([]));
       })
       .catch(() => {
         message.warning(t('account.needLogin'));
@@ -195,6 +201,40 @@ export function AccountPage() {
               {t('common.logout')}
             </Button>
           </AccountActionGrid>
+        </AccountPanel>
+
+        <AccountPanel>
+          <span>Lịch xem căn hộ</span>
+          <h2><CalendarOutlined /> Lịch xem của tôi</h2>
+          <p>Theo dõi các lịch đã gửi và trạng thái xác nhận từ admin.</p>
+          <SecurityList>
+            {appointments.length ? appointments.slice(0, 5).map((appointment) => (
+              <SecurityItem key={appointment.id || appointment._id}>
+                <div>
+                  <strong>{appointment.apartment?.title}</strong>
+                  <small>
+                    {new Date(appointment.preferredAt).toLocaleString('vi-VN')} • {appointment.apartment?.address}
+                  </small>
+                </div>
+                <Tag color={appointment.status === 'confirmed' ? 'green' : appointment.status === 'cancelled' ? 'red' : 'blue'}>
+                  {appointment.status === 'new' ? 'Mới gửi'
+                    : appointment.status === 'confirmed' ? 'Đã xác nhận'
+                      : appointment.status === 'visited' ? 'Đã xem'
+                        : 'Đã hủy'}
+                </Tag>
+              </SecurityItem>
+            )) : (
+              <SecurityItem>
+                <div>
+                  <strong>Chưa có lịch xem</strong>
+                  <small>Mở chi tiết căn hộ và bấm “Đặt lịch xem căn hộ”.</small>
+                </div>
+                <Button size="small">
+                  <Link to="/apartments">Xem căn hộ</Link>
+                </Button>
+              </SecurityItem>
+            )}
+          </SecurityList>
         </AccountPanel>
 
         <AccountPanel id="security">

@@ -198,8 +198,41 @@ export async function getFavorites() {
   return data.data.map(normalizeApartment);
 }
 
+export async function getPersonalRecommendations() {
+  const { data } = await api.get('/apartments/recommendations/me');
+  return {
+    apartments: data.data.map(normalizeApartment),
+    profile: data.profile
+  };
+}
+
 export async function createInterest(apartmentId, note) {
   const { data } = await api.post(`/apartments/${apartmentId}/interest`, { note });
+  return data.data;
+}
+
+export async function recordApartmentView(apartmentId) {
+  const { data } = await api.post(`/apartments/${apartmentId}/view`);
+  return data.data;
+}
+
+export async function createViewingAppointment(apartmentId, payload) {
+  const { data } = await api.post(`/apartments/${apartmentId}/viewing`, payload);
+  return data.data;
+}
+
+export async function getMyViewingAppointments() {
+  const { data } = await api.get('/apartments/viewings/me');
+  return data.data;
+}
+
+export async function getViewingAppointments() {
+  const { data } = await api.get('/apartments/viewings');
+  return data.data;
+}
+
+export async function updateViewingAppointment(appointmentId, payload) {
+  const { data } = await api.patch(`/apartments/viewings/${appointmentId}`, payload);
   return data.data;
 }
 
@@ -225,6 +258,11 @@ export async function getContactRequests() {
 
 export async function updateContactRequest(contactId, payload) {
   const { data } = await api.patch(`/contact/${contactId}`, payload);
+  return data.data;
+}
+
+export async function getApartmentAnalytics() {
+  const { data } = await api.get('/apartments/analytics/overview');
   return data.data;
 }
 
