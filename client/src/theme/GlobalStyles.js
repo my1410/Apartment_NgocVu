@@ -30,10 +30,10 @@ export const GlobalStyles = createGlobalStyle`
       radial-gradient(circle at top left, rgba(32, 208, 163, 0.16), transparent 30%),
       radial-gradient(circle at 80% 12%, rgba(55, 169, 255, 0.15), transparent 28%),
       linear-gradient(135deg, #f6fbff 0%, #eef7f6 48%, #f8fbff 100%);
-    --text-main: #102033;
-    --text-heading: #07111f;
-    --text-muted: rgba(15, 23, 42, 0.68);
-    --text-soft: rgba(15, 23, 42, 0.52);
+    --text-main: #07111f;
+    --text-heading: #020617;
+    --text-muted: #0f172a;
+    --text-soft: #1f2937;
     --surface: rgba(255, 255, 255, 0.74);
     --surface-strong: rgba(255, 255, 255, 0.9);
     --surface-solid: rgba(255, 255, 255, 0.96);

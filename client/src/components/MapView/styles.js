@@ -63,6 +63,14 @@ export const MapToolbar = styled.div`
     font-size: 22px;
   }
 
+  :root[data-theme='light'] & {
+    span,
+    strong {
+      color: #020617;
+      opacity: 1;
+    }
+  }
+
   @media (max-width: 640px) {
     align-items: flex-start;
     flex-direction: column;

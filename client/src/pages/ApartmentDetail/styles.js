@@ -109,6 +109,25 @@ export const GlassPanel = styled.section`
     padding: 18px;
     border-radius: 24px;
   }
+
+  :root[data-theme='light'] & {
+    color: #020617;
+
+    h2,
+    p,
+    .ant-descriptions-item-label,
+    .ant-descriptions-item-content {
+      color: #020617 !important;
+      opacity: 1 !important;
+      text-shadow: none;
+    }
+
+    .ant-tag {
+      color: #111827;
+      border-color: rgba(17, 24, 39, 0.18);
+      background: rgba(255, 255, 255, 0.92);
+    }
+  }
 `;
 
 export const GalleryShell = styled.div`
