@@ -34,6 +34,13 @@ export const FilterCard = styled.div`
     font-weight: 800;
   }
 
+  :root[data-theme='light'] & label,
+  :root[data-theme='light'] & .ant-checkbox-wrapper,
+  :root[data-theme='light'] & .ant-slider-mark-text {
+    color: #020617 !important;
+    opacity: 1;
+  }
+
   @media (max-width: 640px) {
     padding: 18px;
     border-radius: 24px;
@@ -56,10 +63,18 @@ export const FilterTitle = styled.div`
     text-transform: uppercase;
   }
 
+  :root[data-theme='light'] & span {
+    color: #020617;
+  }
+
   h3 {
     margin: 4px 0 0;
     color: var(--text-heading);
     font-size: clamp(20px, 2vw, 26px);
+  }
+
+  :root[data-theme='light'] & h3 {
+    color: #020617;
   }
 
   @media (max-width: 640px) {

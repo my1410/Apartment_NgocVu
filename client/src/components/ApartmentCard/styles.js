@@ -15,6 +15,17 @@ export const CardBody = styled.div`
     color: rgba(231, 238, 251, 0.82);
     background: var(--surface);
   }
+
+  :root[data-theme='light'] &,
+  :root[data-theme='light'] & .ant-tag {
+    color: #020617;
+    opacity: 1;
+  }
+
+  :root[data-theme='light'] & .ant-tag {
+    border-color: rgba(2, 6, 23, 0.16);
+    background: rgba(255, 255, 255, 0.92);
+  }
 `;
 
 export const TitleRow = styled.div`
@@ -54,6 +65,13 @@ export const TitleRow = styled.div`
     font-size: 19px;
   }
 
+  :root[data-theme='light'] & button,
+  :root[data-theme='light'] & p,
+  :root[data-theme='light'] & strong {
+    color: #020617;
+    opacity: 1;
+  }
+
   @media (max-width: 520px) {
     flex-direction: column;
   }
@@ -73,6 +91,13 @@ export const MetaGrid = styled.div`
     text-align: center;
     font-size: 13px;
     font-weight: 700;
+  }
+
+  :root[data-theme='light'] & span {
+    color: #020617;
+    border-color: rgba(2, 6, 23, 0.14);
+    background: rgba(255, 255, 255, 0.9);
+    opacity: 1;
   }
 
   @media (max-width: 520px) {
@@ -96,5 +121,11 @@ export const AvailabilityBar = styled.div`
     color: var(--text-soft);
     font-size: 13px;
     font-weight: 800;
+  }
+
+  :root[data-theme='light'] &,
+  :root[data-theme='light'] & span {
+    color: #020617;
+    opacity: 1;
   }
 `;

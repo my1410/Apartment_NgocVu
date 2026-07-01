@@ -9,6 +9,10 @@ export const Wrap = styled.div`
     font-size: 16px;
     line-height: 1.7;
   }
+
+  :root[data-theme='light'] & p {
+    color: #020617;
+  }
 `;
 
 export const Badge = styled.span`
@@ -23,6 +27,12 @@ export const Badge = styled.span`
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+
+  :root[data-theme='light'] & {
+    color: #020617;
+    border-color: rgba(2, 6, 23, 0.2);
+    background: rgba(32, 208, 163, 0.16);
+  }
 `;
 
 export const Title = styled.h2`

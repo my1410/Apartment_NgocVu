@@ -45,6 +45,12 @@ export const HeroCopy = styled.div`
     text-transform: uppercase;
   }
 
+  :root[data-theme='light'] & > span {
+    color: #020617;
+    border-color: rgba(2, 6, 23, 0.2);
+    background: rgba(32, 208, 163, 0.16);
+  }
+
   h1 {
     max-width: 1050px;
     margin: 0;
@@ -60,6 +66,12 @@ export const HeroCopy = styled.div`
     color: var(--text-muted);
     font-size: clamp(16px, 2vw, 21px);
     line-height: 1.75;
+  }
+
+  :root[data-theme='light'] & h1,
+  :root[data-theme='light'] & p {
+    color: #020617;
+    opacity: 1;
   }
 
   @media (max-width: 640px) {
@@ -128,6 +140,12 @@ export const HeroMetric = styled.div`
     color: var(--text-soft);
     font-size: 13px;
     font-weight: 800;
+  }
+
+  :root[data-theme='light'] & strong,
+  :root[data-theme='light'] & span {
+    color: #020617;
+    opacity: 1;
   }
 
   @media (max-width: 640px) {
@@ -223,6 +241,10 @@ export const VisualCard = styled(motion.div)`
     text-transform: uppercase;
   }
 
+  :root[data-theme='light'] & span {
+    color: #020617;
+  }
+
   h2 {
     margin: 14px 0 10px;
     color: var(--text-heading);
@@ -237,6 +259,13 @@ export const VisualCard = styled(motion.div)`
     line-height: 1.65;
   }
 
+  :root[data-theme='light'] & h2,
+  :root[data-theme='light'] & p,
+  :root[data-theme='light'] & small {
+    color: #020617;
+    opacity: 1;
+  }
+
   div {
     display: flex;
     align-items: end;
@@ -246,6 +275,11 @@ export const VisualCard = styled(motion.div)`
     padding: 18px;
     border-radius: 24px;
     background: rgba(6, 17, 31, 0.46);
+  }
+
+  :root[data-theme='light'] & div {
+    color: #020617;
+    background: rgba(255, 255, 255, 0.86);
   }
 
   small {
@@ -318,6 +352,12 @@ export const FeatureCard = styled.div`
     color: var(--text-muted);
     line-height: 1.7;
   }
+
+  :root[data-theme='light'] & h3,
+  :root[data-theme='light'] & p {
+    color: #020617;
+    opacity: 1;
+  }
 `;
 
 export const FeatureGrid = styled.div`
@@ -353,6 +393,12 @@ export const NearbyPanel = styled.div`
     margin: 0;
     color: var(--text-muted);
     line-height: 1.7;
+  }
+
+  :root[data-theme='light'] & strong,
+  :root[data-theme='light'] & p {
+    color: #020617;
+    opacity: 1;
   }
 
   @media (max-width: 760px) {
@@ -406,6 +452,10 @@ export const ContactCard = styled.div`
     text-transform: uppercase;
   }
 
+  :root[data-theme='light'] & > div > span {
+    color: #020617;
+  }
+
   h2 {
     margin: 10px 0 10px;
     color: var(--text-heading);
@@ -418,6 +468,12 @@ export const ContactCard = styled.div`
     margin: 0;
     color: var(--text-muted);
     line-height: 1.7;
+  }
+
+  :root[data-theme='light'] & h2,
+  :root[data-theme='light'] & p {
+    color: #020617;
+    opacity: 1;
   }
 
   .ant-space {

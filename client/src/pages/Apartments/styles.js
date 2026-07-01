@@ -34,14 +34,22 @@ export const AiPanel = styled.div`
 
   strong {
     display: block;
-    color: #ffffff;
+    color: var(--text-heading);
     margin-bottom: 4px;
   }
 
   p {
     margin: 0;
-    color: rgba(231, 238, 251, 0.72);
+    color: var(--text-main);
     line-height: 1.6;
+  }
+
+  :root[data-theme='light'] & {
+    strong,
+    p {
+      color: #020617;
+      opacity: 1;
+    }
   }
 
   @media (max-width: 760px) {
